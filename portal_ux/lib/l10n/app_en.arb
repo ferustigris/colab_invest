@@ -1,12 +1,12 @@
 {
-    "ticketsNav": "Tickets",
+    "ticketsNav": "Stocks",
     "@ticketsNav": {
         "description": "Navbar label"
     },
 
-    "ticketsPageTitle": "Support Tickets",
+    "ticketsPageTitle": "Stock Analysis",
     "@ticketsPageTitle": {
-        "description": "title on the tickets page"
+        "description": "title on the stocks page"
     },
 
     "aiAssistantNav": "AI Assistant",

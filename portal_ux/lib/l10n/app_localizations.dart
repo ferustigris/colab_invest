@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// Navbar label
   ///
   /// In en, this message translates to:
-  /// **'Tickets'**
+  /// **'Stocks'**
   String get ticketsNav;
 
-  /// title on the tickets page
+  /// title on the stocks page
   ///
   /// In en, this message translates to:
-  /// **'Support Tickets'**
+  /// **'Stock Analysis'**
   String get ticketsPageTitle;
 
   /// Navbar

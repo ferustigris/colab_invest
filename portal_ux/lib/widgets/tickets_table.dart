@@ -52,29 +52,73 @@ class _TicketsTableState extends State<TicketsTable> {
         dynamic aValue, bValue;
 
         switch (columnIndex) {
-          case 0:
-            aValue = a.id;
-            bValue = b.id;
+          case 0: // Ticker
+            aValue = a.ticker;
+            bValue = b.ticker;
             break;
-          case 1:
-            aValue = a.title;
-            bValue = b.title;
+          case 1: // Name
+            aValue = a.name;
+            bValue = b.name;
             break;
-          case 2:
-            aValue = a.status;
-            bValue = b.status;
+          case 2: // Current Price
+            aValue = a.currentPrice ?? 0;
+            bValue = b.currentPrice ?? 0;
             break;
-          case 3:
-            aValue = a.priority;
-            bValue = b.priority;
+          case 3: // Shares Outstanding
+            aValue = a.sharesOutstanding ?? 0;
+            bValue = b.sharesOutstanding ?? 0;
             break;
-          case 4:
-            aValue = a.createdAt;
-            bValue = b.createdAt;
+          case 4: // Revenue
+            aValue = a.revenue ?? 0;
+            bValue = b.revenue ?? 0;
             break;
-          case 5:
-            aValue = a.assignedTo;
-            bValue = b.assignedTo;
+          case 5: // Net Income
+            aValue = a.netIncome ?? 0;
+            bValue = b.netIncome ?? 0;
+            break;
+          case 6: // Total Debt
+            aValue = a.totalDebt ?? 0;
+            bValue = b.totalDebt ?? 0;
+            break;
+          case 7: // SMA 10Y
+            aValue = a.sma10Years ?? 0;
+            bValue = b.sma10Years ?? 0;
+            break;
+          case 8: // Forecast DIV
+            aValue = a.priceForecastDiv ?? 0;
+            bValue = b.priceForecastDiv ?? 0;
+            break;
+          case 9: // Forecast PE
+            aValue = a.priceForecastPE ?? 0;
+            bValue = b.priceForecastPE ?? 0;
+            break;
+          case 10: // Forecast Equity
+            aValue = a.priceForecastEquity ?? 0;
+            bValue = b.priceForecastEquity ?? 0;
+            break;
+          case 11: // Profit Growth 10Y
+            aValue = a.profitGrowth10Years ?? 0;
+            bValue = b.profitGrowth10Years ?? 0;
+            break;
+          case 12: // P/E
+            aValue = a.pe ?? 0;
+            bValue = b.pe ?? 0;
+            break;
+          case 13: // FPE
+            aValue = a.fpe ?? 0;
+            bValue = b.fpe ?? 0;
+            break;
+          case 14: // Free Cash Flow per Stock
+            aValue = a.freeCashFlowPerStock ?? 0;
+            bValue = b.freeCashFlowPerStock ?? 0;
+            break;
+          case 15: // Buyback Percent
+            aValue = a.buybackPercent ?? 0;
+            bValue = b.buybackPercent ?? 0;
+            break;
+          case 16: // Dividend Yield
+            aValue = a.dividendYield ?? 0;
+            bValue = b.dividendYield ?? 0;
             break;
           default:
             return 0;
@@ -91,39 +135,22 @@ class _TicketsTableState extends State<TicketsTable> {
     if (searchQuery.isEmpty) return tickets;
 
     return tickets.where((ticket) {
-      return ticket.id.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          ticket.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          ticket.status.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          ticket.assignedTo.toLowerCase().contains(searchQuery.toLowerCase());
+      return ticket.ticker.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          ticket.name.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'open':
-        return Colors.orange;
-      case 'in progress':
-        return Colors.blue;
-      case 'closed':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+  String _formatNumber(double? value, {int decimals = 2, String suffix = ''}) {
+    if (value == null) return 'N/A';
+    return '${value.toStringAsFixed(decimals)}$suffix';
   }
 
-  Color _getPriorityColor(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'critical':
-        return Colors.red;
-      case 'high':
-        return Colors.orange;
-      case 'medium':
-        return Colors.yellow;
-      case 'low':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+  Color _getProfitGrowthColor(double? growth) {
+    if (growth == null) return Colors.grey;
+    if (growth > 20) return Colors.green;
+    if (growth > 10) return Colors.lightGreen;
+    if (growth > 0) return Colors.orange;
+    return Colors.red;
   }
 
   @override
@@ -151,16 +178,22 @@ class _TicketsTableState extends State<TicketsTable> {
       children: [
         // Search Bar
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   decoration: InputDecoration(
-                    labelText: 'Search tickets...',
-                    prefixIcon: Icon(Icons.search),
+                    labelText: 'Search...',
+                    prefixIcon: Icon(Icons.search, size: 20),
                     border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    labelStyle: TextStyle(fontSize: 12),
                   ),
+                  style: TextStyle(fontSize: 12),
                   onChanged: (value) {
                     setState(() {
                       searchQuery = value;
@@ -168,11 +201,14 @@ class _TicketsTableState extends State<TicketsTable> {
                   },
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: _loadTickets,
-                icon: Icon(Icons.refresh),
-                label: Text('Refresh'),
+                icon: Icon(Icons.refresh, size: 16),
+                label: Text('Refresh', style: TextStyle(fontSize: 11)),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                ),
               ),
             ],
           ),
@@ -187,14 +223,205 @@ class _TicketsTableState extends State<TicketsTable> {
                 sortColumnIndex: sortColumnIndex,
                 sortAscending: isAscending,
                 showCheckboxColumn: false,
+                columnSpacing: 12.0,
+                dataRowMinHeight: 35,
+                dataRowMaxHeight: 50,
+                headingRowHeight: 40,
                 columns: [
-                  DataColumn(label: Text('Ticket ID'), onSort: _onSort),
-                  DataColumn(label: Text('Title'), onSort: _onSort),
-                  DataColumn(label: Text('Status'), onSort: _onSort),
-                  DataColumn(label: Text('Priority'), onSort: _onSort),
-                  DataColumn(label: Text('Created'), onSort: _onSort),
-                  DataColumn(label: Text('Assigned To'), onSort: _onSort),
-                  DataColumn(label: Text('Actions')),
+                  DataColumn(
+                    label: Text(
+                      'Ticker',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Name',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Price',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Shares',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Revenue',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Net Inc',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Debt',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'SMA',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'F.DIV',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'F.PE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'F.Eq',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Growth',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'P/E',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'FPE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'FCF%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Buy%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Div%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Act',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
                 rows:
                     filteredTickets.map((ticket) {
@@ -207,92 +434,197 @@ class _TicketsTableState extends State<TicketsTable> {
                         cells: [
                           DataCell(
                             Text(
-                              ticket.id,
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              ticket.ticker,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
                           DataCell(
                             Container(
-                              constraints: BoxConstraints(maxWidth: 200),
+                              constraints: BoxConstraints(maxWidth: 80),
                               child: Text(
-                                ticket.title,
+                                ticket.name,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 10),
                               ),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(ticket.currentPrice, decimals: 0),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.sharesOutstanding,
+                                decimals: 1,
+                              ),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(ticket.revenue, decimals: 0),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(ticket.netIncome, decimals: 0),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(ticket.totalDebt, decimals: 0),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(ticket.sma10Years, decimals: 0),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.priceForecastDiv,
+                                decimals: 0,
+                              ),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.priceForecastPE,
+                                decimals: 0,
+                              ),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.priceForecastEquity,
+                                decimals: 0,
+                              ),
+                              style: TextStyle(fontSize: 11),
                             ),
                           ),
                           DataCell(
                             Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 4,
+                                vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(
-                                  ticket.status,
+                                color: _getProfitGrowthColor(
+                                  ticket.profitGrowth10Years,
                                 ).withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: _getStatusColor(ticket.status),
+                                  color: _getProfitGrowthColor(
+                                    ticket.profitGrowth10Years,
+                                  ),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                ticket.status,
-                                style: TextStyle(
-                                  color: _getStatusColor(ticket.status),
-                                  fontWeight: FontWeight.bold,
+                                _formatNumber(
+                                  ticket.profitGrowth10Years,
+                                  decimals: 0,
+                                  suffix: '%',
                                 ),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getPriorityColor(
-                                  ticket.priority,
-                                ).withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _getPriorityColor(ticket.priority),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                ticket.priority,
                                 style: TextStyle(
-                                  color: _getPriorityColor(ticket.priority),
+                                  color: _getProfitGrowthColor(
+                                    ticket.profitGrowth10Years,
+                                  ),
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
                           ),
                           DataCell(
                             Text(
-                              '${ticket.createdAt.day}/${ticket.createdAt.month}/${ticket.createdAt.year}',
+                              _formatNumber(ticket.pe, decimals: 0),
+                              style: TextStyle(fontSize: 11),
                             ),
                           ),
-                          DataCell(Text(ticket.assignedTo)),
+                          DataCell(
+                            Text(
+                              _formatNumber(ticket.fpe, decimals: 0),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.freeCashFlowPerStock,
+                                decimals: 1,
+                                suffix: '%',
+                              ),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.buybackPercent,
+                                decimals: 1,
+                                suffix: '%',
+                              ),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              _formatNumber(
+                                ticket.dividendYield,
+                                decimals: 1,
+                                suffix: '%',
+                              ),
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
                           DataCell(
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, size: 18),
-                                  onPressed: () => _editTicket(ticket),
-                                  tooltip: 'Edit',
+                                  icon: Icon(
+                                    Icons.analytics,
+                                    size: 14,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () => _showAnalytics(ticket),
+                                  tooltip: 'Analytics',
+                                  padding: EdgeInsets.all(2),
+                                  constraints: BoxConstraints(
+                                    minWidth: 20,
+                                    minHeight: 20,
+                                  ),
                                 ),
                                 IconButton(
                                   icon: Icon(
-                                    Icons.delete,
-                                    size: 18,
+                                    Icons.favorite_border,
+                                    size: 14,
                                     color: Colors.red,
                                   ),
-                                  onPressed: () => _deleteTicket(ticket),
-                                  tooltip: 'Delete',
+                                  onPressed: () => _addToWatchlist(ticket),
+                                  tooltip: 'Watchlist',
+                                  padding: EdgeInsets.all(2),
+                                  constraints: BoxConstraints(
+                                    minWidth: 20,
+                                    minHeight: 20,
+                                  ),
                                 ),
                               ],
                             ),
@@ -304,16 +636,6 @@ class _TicketsTableState extends State<TicketsTable> {
             ),
           ),
         ),
-
-        // Add Ticket Button
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton.icon(
-            onPressed: _addTicket,
-            icon: Icon(Icons.add),
-            label: Text('Add New Ticket'),
-          ),
-        ),
       ],
     );
   }
@@ -323,30 +645,112 @@ class _TicketsTableState extends State<TicketsTable> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('Ticket Details'),
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'ID: ${ticket.id}',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                Text('Title: ${ticket.title}'),
-                SizedBox(height: 8),
-                Text('Status: ${ticket.status}'),
-                SizedBox(height: 8),
-                Text('Priority: ${ticket.priority}'),
-                SizedBox(height: 8),
-                Text('Assigned to: ${ticket.assignedTo}'),
-                SizedBox(height: 8),
-                Text('Created: ${ticket.createdAt.toString()}'),
-                SizedBox(height: 8),
-                Text('Description:'),
-                SizedBox(height: 4),
-                Text(ticket.description),
-              ],
+            title: Text('${ticket.ticker} - ${ticket.name}'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDetailRow('Ticker', ticket.ticker),
+                  _buildDetailRow('Company Name', ticket.name),
+                  _buildDetailRow(
+                    'Current Price',
+                    _formatNumber(ticket.currentPrice, suffix: '\$'),
+                  ),
+                  _buildDetailRow(
+                    'Market Cap',
+                    _formatNumber(ticket.marketCap, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'Revenue',
+                    _formatNumber(ticket.revenue, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'Net Income',
+                    _formatNumber(ticket.netIncome, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'EBITDA',
+                    _formatNumber(ticket.ebitda, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'P/E Ratio',
+                    _formatNumber(ticket.pe, decimals: 1),
+                  ),
+                  _buildDetailRow(
+                    'FPE',
+                    _formatNumber(ticket.fpe, decimals: 1),
+                  ),
+                  _buildDetailRow(
+                    'Free Cash Flow per Stock',
+                    _formatNumber(
+                      ticket.freeCashFlowPerStock,
+                      decimals: 2,
+                      suffix: '%',
+                    ),
+                  ),
+                  _buildDetailRow(
+                    'Buyback',
+                    _formatNumber(
+                      ticket.buybackPercent,
+                      decimals: 1,
+                      suffix: '%',
+                    ),
+                  ),
+                  _buildDetailRow(
+                    'Dividend Yield',
+                    _formatNumber(ticket.dividendYield, suffix: '%'),
+                  ),
+                  _buildDetailRow(
+                    'P/S Ratio',
+                    _formatNumber(ticket.ps, decimals: 1),
+                  ),
+                  _buildDetailRow(
+                    'EV/EBITDA',
+                    _formatNumber(ticket.evEbitda, decimals: 1),
+                  ),
+                  _buildDetailRow(
+                    'Dividend Yield',
+                    _formatNumber(ticket.dividendYield, suffix: '%'),
+                  ),
+                  _buildDetailRow(
+                    'Shares Outstanding',
+                    _formatNumber(ticket.sharesOutstanding, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'SMA 10 Years',
+                    _formatNumber(ticket.sma10Years, decimals: 1),
+                  ),
+                  _buildDetailRow(
+                    'Price Forecast (DIV)',
+                    _formatNumber(ticket.priceForecastDiv, suffix: '\$'),
+                  ),
+                  _buildDetailRow(
+                    'Price Forecast (PE)',
+                    _formatNumber(ticket.priceForecastPE, suffix: '\$'),
+                  ),
+                  _buildDetailRow(
+                    'Price Forecast (Equity)',
+                    _formatNumber(ticket.priceForecastEquity, suffix: '\$'),
+                  ),
+                  _buildDetailRow(
+                    'Profit Growth 10Y',
+                    _formatNumber(ticket.profitGrowth10Years, suffix: '%'),
+                  ),
+                  _buildDetailRow(
+                    'Free Cash Flow',
+                    _formatNumber(ticket.freeCashFlow, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'Total Debt',
+                    _formatNumber(ticket.totalDebt, suffix: 'B'),
+                  ),
+                  _buildDetailRow(
+                    'Cash',
+                    _formatNumber(ticket.cash, suffix: 'B'),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -358,48 +762,28 @@ class _TicketsTableState extends State<TicketsTable> {
     );
   }
 
-  void _editTicket(Ticket ticket) {
-    // TODO: Implement edit functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit functionality coming soon...')),
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('$label:', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(value),
+        ],
+      ),
     );
   }
 
-  void _deleteTicket(Ticket ticket) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Delete Ticket'),
-            content: Text(
-              'Are you sure you want to delete ticket ${ticket.id}?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    tickets.removeWhere((t) => t.id == ticket.id);
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ticket ${ticket.id} deleted')),
-                  );
-                },
-                child: Text('Delete', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+  void _showAnalytics(Ticket ticket) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Analytics for ${ticket.ticker} coming soon...')),
     );
   }
 
-  void _addTicket() {
-    // TODO: Implement add functionality
+  void _addToWatchlist(Ticket ticket) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Add ticket functionality coming soon...')),
+      SnackBar(content: Text('${ticket.ticker} added to watchlist!')),
     );
   }
 }

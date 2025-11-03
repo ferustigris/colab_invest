@@ -9,10 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get ticketsNav => 'Tickets';
+  String get ticketsNav => 'Stocks';
 
   @override
-  String get ticketsPageTitle => 'Support Tickets';
+  String get ticketsPageTitle => 'Stock Analysis';
 
   @override
   String get aiAssistantNav => 'AI Assistant';
