@@ -21,18 +21,13 @@ def tickets(request, user):
     last_element = Path(path).name
     print("this is the last element:", last_element)
 
-    # List of stock tickers as objects
+    # List of stock tickers as strings
     stock_tickers = [
-        {"ticker": "VOW"}, {"ticker": "KHC"}, {"ticker": "HPK"}, {"ticker": "INTC"}, {"ticker": "JD"}, 
-        {"ticker": "DOW"}, {"ticker": "BAS"}, {"ticker": "PFE"}, {"ticker": "BIDU"}, {"ticker": "EHLD"}, 
-        {"ticker": "TGT"}, {"ticker": "KSA"}, {"ticker": "SAN1"}, {"ticker": "SHELL"}, {"ticker": "RIO"}, 
-        {"ticker": "PYPL"}, {"ticker": "SOLV"}, {"ticker": "OXY"}, {"ticker": "SWR"}, {"ticker": "BAYN"}, 
-        {"ticker": "TTE"}, {"ticker": "OKE"}, {"ticker": "ULTA"}, {"ticker": "BBWI"}, {"ticker": "SIRI"}, 
-        {"ticker": "BMW"}, {"ticker": "NVS"}, {"ticker": "AAPL"}, {"ticker": "IBE"}, {"ticker": "VZ"}, 
-        {"ticker": "ORA"}, {"ticker": "HAFN"}, {"ticker": "REP"}, {"ticker": "USB"}, {"ticker": "DAL"}, 
-        {"ticker": "GOOGL"}, {"ticker": "AXP"}, {"ticker": "MSFT"}, {"ticker": "ALV"}, {"ticker": "BABA"}, 
-        {"ticker": "BAC"}, {"ticker": "IAG"}, {"ticker": "ESEA"}, {"ticker": "METC"}, {"ticker": "HOT"}, 
-        {"ticker": "META"}, {"ticker": "TSM"}
+        "VOW", "KHC", "HPK", "INTC", "JD", "DOW", "BAS", "PFE", "BIDU", "EHLD", 
+        "TGT", "KSA", "SAN1", "SHELL", "RIO", "PYPL", "SOLV", "OXY", "SWR", "BAYN", 
+        "TTE", "OKE", "ULTA", "BBWI", "SIRI", "BMW", "NVS", "AAPL", "IBE", "VZ", 
+        "ORA", "HAFN", "REP", "USB", "DAL", "GOOGL", "AXP", "MSFT", "ALV", "BABA", 
+        "BAC", "IAG", "ESEA", "METC", "HOT", "META", "TSM"
     ]
     
     return stock_tickers

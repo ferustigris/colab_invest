@@ -37,3 +37,44 @@ resource "google_storage_bucket_object" "tickets_source" {
   bucket = google_storage_bucket.src_bucket.name
   source = data.archive_file.tickets_function_dist.output_path
 }
+
+
+resource "google_cloudfunctions_function" "ticket_details_function" {
+  name        = "ticket_details"
+  description = "Ask assistant for help"
+  region      = "europe-west1"
+  entry_point = "ticket_details"
+
+  runtime = "python311"
+
+  source_archive_bucket = google_storage_bucket.src_bucket.name
+  source_archive_object = google_storage_bucket_object.ticket_details_source.name
+
+  trigger_http = true
+  service_account_email = google_service_account.default_compute.email
+
+  environment_variables = {
+    GOOGLE_FUNCTION_SOURCE = "main.py"
+    GCLOUD_PROJECT = data.google_project.project.project_id
+    GCLOUD_PROJECT_NUMBER = data.google_project.project.number
+    TELEGRAM_CHAT_ID = "5081253547"
+    CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
+  }
+  depends_on = [
+    google_storage_bucket_object.ticket_details_source,
+    google_service_account.default_compute
+  ]
+}
+
+data "archive_file" "ticket_details_function_dist" {
+  type        = "zip"
+  source_dir  = "./functions/ticket_details"
+  output_path = "function/ticket_details_dist${local.always_trigger}.zip"
+  depends_on = [local.always_trigger]
+}
+
+resource "google_storage_bucket_object" "ticket_details_source" {
+  name   = "ticket_details-source.${data.archive_file.ticket_details_function_dist.output_md5}.zip"
+  bucket = google_storage_bucket.src_bucket.name
+  source = data.archive_file.ticket_details_function_dist.output_path
+}

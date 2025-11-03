@@ -15,6 +15,8 @@ class AppConstants {
   static final String cloudUrlDeviceRegistration =
       '$cloudFunctionsBaseUrl/set-user-device';
   static final String cloudUrlTickets = '$cloudFunctionsBaseUrl/tickets';
+  static final String cloudUrlTicketDetails =
+      '$cloudFunctionsBaseUrl/ticket_details';
   static final String aiModelEndpointUrl = '$cloudFunctionsBaseUrl/ask-chat';
 
   static const Map<String, String> userManualUrlMap = {
