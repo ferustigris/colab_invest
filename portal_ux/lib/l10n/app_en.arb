@@ -1,0 +1,197 @@
+{
+    "ticketsNav": "Tickets",
+    "@ticketsNav": {
+        "description": "Navbar label"
+    },
+
+    "ticketsPageTitle": "Support Tickets",
+    "@ticketsPageTitle": {
+        "description": "title on the tickets page"
+    },
+
+    "aiAssistantNav": "AI Assistant",
+    "@aiAssistantNav": {
+        "description": "Navbar"
+    },
+
+    "aiAssistantPageTitle": "Ask me",
+    "@aiAssistantPageTitle": {
+        "description": "title on the app page"
+    },
+
+    "userSettingsPageTitle": "User Settings",
+    "@userSettingsPageTitle": {
+        "description": "title on the app page"
+    },
+
+    "userMenuItemSettings": "Settings",
+    "@userMenuItemSettings": {
+        "description": "User menu item"
+    },
+
+    "userMenuItemLogOut": "Log out",
+    "@userMenuItemLogOut": {
+        "description": "User menu item"
+    },
+
+    "userSettingsLanguageLabel": "Select the language",
+    "@userSettingsLanguageLabel": {
+        "description": "user settings item label"
+    },
+
+    "aiAssistantChatUserMarker": "You",
+    "@aiAssistantChatUserMarker": {
+        "description": "message marker in the chat"
+    },
+
+    "aiAssistantChatInputPlaceholder": "Type here, press `Enter` to send.",
+    "@aiAssistantChatInputPlaceholder": {
+        "description": "chat input placeholder"
+    },
+
+    "errorNoDataFound": "No data found",
+    "@errorNoDataFound": {
+        "description": "Error message"
+    },
+
+    "aiLanguagePrompt": "Answer me in English.",
+    "@aiLanguagePrompt": {
+        "description": "Prompt to switch AI model language"
+    },
+
+    "gremlinMessage": "Something went wrong, not my fault!",
+    "@gremlinMessage": {
+        "description": "Message of the gremlin on error."
+    },
+
+    "registerDeviceCTA": "Register your DVR device",
+    "@registerDeviceCTA": {
+        "description": "CTA appears when link with device id is followed by the user"
+    },
+
+    "registerDeviceSuccessMessage": "Your device was successfully registered",
+    "@registerDeviceSuccessMessage": {
+        "description": "Success message of the user's DVR registration (linking)"
+    },
+
+    "registerDeviceAlertTitle": "Device Registration",
+    "@registerDeviceAlertTitle": {
+        "description": "The title of the alert pop up with message on registration attempt result"
+    },
+
+    "defaultActionSuccessAckMessage": "Success!",
+    "@defaultActionSuccessAckMessage": {
+        "description": "A message to show for user to acknowledge an action success"
+    },
+
+    "defaultActionSuccessAckButtonLabel": "Understood",
+    "@defaultActionSuccessAckButtonLabel": {
+        "description": "A label on an acknowledge button for user to acknowledge an action success"
+    },
+
+    "deviceRegistrationInputCTA": "Enter your device id",
+    "@deviceRegistrationInputCTA": {
+        "description": "Label or placeholder for the device id input"
+    },
+
+    "registrationButtonLabel": "Register",
+    "@registrationButtonLabel": {
+        "description": "Label for the device registration button"
+    },
+
+    "deviceRegistrationPageNavigationLabel": "Link a device to my account",
+    "@deviceRegistrationPageNavigationLabel": {
+        "description": "Label for the navigation to the device registration page"
+    },
+
+    "goToHomePageAckButtonLabel": "Understood. Go to Home Page",
+    "@goToHomePageAckButtonLabel": {
+        "description": "Label for the button to acknowledge successful registration" 
+    },
+
+    "generalWelcomeTitle": "Welcome to Solvía Tech Vigilance!",
+    "@generalWelcomeTitle": {
+        "description": "general Welcome AppBar title" 
+    },
+
+    "passwordInputPlaceholder": "Password",
+    "@passwordInputPlaceholder": {
+        "description": "Password text input placeholder"
+    },
+    
+    "passwordResetMailSentMessage": "Password reset mail sent. Check your email and follow the instructions",
+    "@passwordResetMailSentMessage": {
+        "description": "A message to show on successful password reset mail sent."
+    },
+    
+    "resetPasswordButtonLabel": "Reset password",
+    "@resetPasswordButtonLabel": {
+        "description": "Reset password button label"
+    },
+
+    "googleSignInButtonLabel": "Sign In by Google",
+    "@googleSignInButtonLabel": {
+        "description": "Sign In by Google button label"
+    },
+
+    "emailSignInOptionEmailCTALabel": "or by Email",
+    "@emailSignInOptionEmailCTALabel": {
+        "description": "label of sign in by Email option CTA"
+    },
+
+    "resetPasswordPageTitle": "Enter your email to reset password",
+    "@resetPasswordPageTitle": {
+        "description": "Reset password page title"
+    },
+    
+    "userRegistrationPageTitle": "Enter your email and set the password",
+    "@userRegistrationPageTitle": {
+        "description": "User registration page title"
+    },
+    
+    "emailVerificationCTA": "Please verify your email",
+    "@emailVerificationCTA": {
+        "description": "Please verify your email CTA"
+    },
+
+    "verificationEmailSendButtonLabel": "Send the verification email",
+    "@verificationEmailSendButtonLabel": {
+        "description": "Send the verification email button title"
+    },
+
+    "cancelButtonLabel": "Cancel",
+    "@cancelButtonLabel": {
+        "description": "Cancel button label"
+    },
+
+    "signInButtonLabel": "Sign In",
+    "@signInButtonLabel": {
+        "description": "Sign In button label"
+    },    
+
+    "userManualLabel": "User Manual",
+    "@userManualLabel": {
+        "description": "User Manual label"
+    },
+
+    "dismissLabel": "Dismiss",
+    "@dismissLabel": {
+        "description": "Dismiss label"
+    },
+
+    "dontShowAgainLabel": "Don't show again",
+    "@dontShowAgainLabel": {
+        "description": "Don't show again label"
+    },
+
+    "haCredentialsNotificationLabel": "Home Assistant Credentials\n\nUser: demo\nPassword: demo",
+    "@haCredentialsNotificationLabel": {
+        "description": "Home Assistant Credentials label"
+    },
+
+    "verificationEmailSentMessage": "Verification email is sent, please check the instructions in your mailbox. \nIf there is no email in your inbox, please check the spam folder.",
+    "@verificationEmailSentMessage": {
+        "description": "Verificarion email sent successfully"
+    }
+
+}

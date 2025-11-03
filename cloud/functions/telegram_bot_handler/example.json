@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "update_id": 688951123,
+      "message": {
+        "message_id": 4,
+        "from": {
+          "id": 5081253547,
+          "is_bot": false,
+          "first_name": "Andrey",
+          "language_code": "es"
+        },
+        "chat": {
+          "id": 5081253547,
+          "first_name": "Andrey",
+          "type": "private"
+        },
+        "date": 1762015496,
+        "text": "Под"
+      }
+    }
+  ]
+}

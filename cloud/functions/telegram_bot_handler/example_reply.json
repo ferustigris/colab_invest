@@ -1,0 +1,35 @@
+{
+  "update_id": 688951125,
+  "message": {
+    "message_id": 7,
+    "from": {
+      "id": 5081253547,
+      "is_bot": false,
+      "first_name": "Andrey",
+      "language_code": "es"
+    },
+    "chat": {
+      "id": 5081253547,
+      "first_name": "Andrey",
+      "type": "private"
+    },
+    "date": 1762030051,
+    "reply_to_message": {
+      "message_id": 5,
+      "from": {
+        "id": 8234339185,
+        "is_bot": true,
+        "first_name": "Colab-support",
+        "username": "Colab_support_bot"
+      },
+      "chat": {
+        "id": 5081253547,
+        "first_name": "Andrey",
+        "type": "private"
+      },
+      "date": 1762015671,
+      "text": "user: Hello World from GCP"
+    },
+    "text": "Rrr"
+  }
+}
