@@ -1,0 +1,180 @@
+{
+  "buyback": {
+    "comment": "Total amount spent on share buybacks in last twelve months",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "buyback",
+    "value": 0
+  },
+  "buybackPercent": {
+    "comment": "Percentage of shares bought back relative to outstanding shares",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "buybackPercent",
+    "value": 0
+  },
+  "cash": {
+    "comment": "Cash and cash equivalents on balance sheet - totalCash data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "cash",
+    "value": 0
+  },
+  "currentPrice": {
+    "comment": "Real-time market price as of latest trading session - currentPrice data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "currentPrice",
+    "value": 0
+  },
+  "debtEbitda": {
+    "comment": "Debt-to-EBITDA ratio indicating leverage",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "debtEbitda",
+    "value": 0
+  },
+  "dividend": {
+    "comment": "Annual dividend per share",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "dividend",
+    "value": 0
+  },
+  "dividendYield": {
+    "comment": "Dividend yield as percentage of current stock price",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "dividendYield",
+    "value": 0
+  },
+  "ebitda": {
+    "comment": "Earnings before interest, taxes, depreciation, and amortization",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "ebitda",
+    "value": 0
+  },
+  "evEbitda": {
+    "comment": "Enterprise value to EBITDA ratio",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "evEbitda",
+    "value": 0
+  },
+  "fpe": {
+    "comment": "Forward price-to-earnings ratio based on next year estimates",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "fpe",
+    "value": 0
+  },
+  "freeCashFlow": {
+    "comment": "Free cash flow available after capital expenditures - freeCashflow data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "freeCashFlow",
+    "value": 0
+  },
+  "freeCashFlowPerStock": {
+    "comment": "Free cash flow divided by shares outstanding",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "freeCashFlowPerStock",
+    "value": 0
+  },
+  "marketCap": {
+    "comment": "Total market capitalization based on current share price",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "marketCap",
+    "value": 0
+  },
+  "name": "Company APPL",
+  "netIncome": {
+    "comment": "Net income after all expenses and taxes - netIncomeToCommon data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "netIncome",
+    "value": 0
+  },
+  "nta": {
+    "comment": "Net tangible assets value",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "nta",
+    "value": 0
+  },
+  "pe": {
+    "comment": "Price-to-earnings ratio based on trailing twelve months",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "pe",
+    "value": 0
+  },
+  "priceForecastDiv": {
+    "comment": "Price forecast based on dividend discount model",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "priceForecastDiv",
+    "value": 0
+  },
+  "priceForecastEquity": {
+    "comment": "Price forecast based on equity valuation model",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "priceForecastEquity",
+    "value": 0
+  },
+  "priceForecastPE": {
+    "comment": "Price forecast based on P/E ratio analysis",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "priceForecastPE",
+    "value": 0
+  },
+  "profitGrowth10Years": {
+    "comment": "Strong consistent growth over the past decade",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "profitGrowth10Years",
+    "value": 0
+  },
+  "ps": {
+    "comment": "Price-to-sales ratio",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "ps",
+    "value": 0
+  },
+  "revenue": {
+    "comment": "Total revenue for the last twelve months - totalRevenue data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "revenue",
+    "value": 0
+  },
+  "sharesOutstanding": {
+    "comment": "Total number of shares currently outstanding - sharesOutstanding data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "sharesOutstanding",
+    "value": 0
+  },
+  "sma10Years": {
+    "comment": "10-year simple moving average indicating long-term trend",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "sma10Years",
+    "value": 0
+  },
+  "summary": "Summary about company APPL",
+  "ticker": "APPL",
+  "totalDebt": {
+    "comment": "Total debt including short-term and long-term obligations - totalDebt data not available",
+    "dataQuality": 0.0,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "name": "totalDebt",
+    "value": 0
+  }
+}

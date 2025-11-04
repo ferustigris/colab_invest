@@ -13,7 +13,6 @@ class CurrentPrice(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
         print(f"Loading data for currentPrice metric for ticker {stock_details.ticker}")
         
         if not 'currentPrice' in yahoo_data:
@@ -27,7 +26,7 @@ class CurrentPrice(FinancialMetric):
         try:
             yahoo_data_last_update_dt = datetime.strptime(yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
-            self.data_quality = 1/((now - yahoo_data_last_update_dt + timedelta(seconds=1)) / timedelta(days=1))
+            self.data_quality = 1.0/((now - yahoo_data_last_update_dt).days // 1 + 1)
             print(f"Successfully calculated data quality for currentPrice: {self.data_quality}")
         except ValueError:
             print(f"Invalid last update format for currentPrice metric: {yahoo_data.get('lastUpdate', 'N/A')}")
@@ -37,6 +36,5 @@ class CurrentPrice(FinancialMetric):
 
         self.comment += " - last update on " + yahoo_data['lastUpdate']
         self.value = yahoo_data['currentPrice']
-        self.data_quality = 0.8
         self.last_update = yahoo_data['lastUpdate']
         print(f"CurrentPrice metric loaded successfully: value={self.value}, quality={self.data_quality}")

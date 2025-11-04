@@ -42,6 +42,9 @@ class TicketService {
           final ticket = await getTicketDetails(ticker);
           currentTickets.add(ticket);
           yield List.from(currentTickets); // Эмитим копию текущего списка
+          await Future.delayed(
+            Duration(milliseconds: 100),
+          ); // Задержка для визуализации
         } catch (e) {
           // Пропускаем тикеры с ошибками, но продолжаем загрузку остальных
           print('Failed to load $ticker: $e');
@@ -58,6 +61,9 @@ class TicketService {
           final ticket = await getTicketDetails(ticker);
           currentTickets.add(ticket);
           yield List.from(currentTickets);
+          await Future.delayed(
+            Duration(milliseconds: 100),
+          ); // Задержка для визуализации
         } catch (detailError) {
           // Используем mock данные если API недоступен
           print('Using mock data for $ticker due to error: $detailError');
@@ -67,6 +73,9 @@ class TicketService {
           );
           currentTickets.add(mockTicket);
           yield List.from(currentTickets);
+          await Future.delayed(
+            Duration(milliseconds: 100),
+          ); // Задержка для визуализации
         }
       }
     }

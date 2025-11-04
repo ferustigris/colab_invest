@@ -27,7 +27,7 @@ class FreeCashFlow(FinancialMetric):
         try:
             yahoo_data_last_update_dt = datetime.strptime(yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
-            self.data_quality = 1/((now - yahoo_data_last_update_dt + timedelta(seconds=1)) / timedelta(days=7))
+            self.data_quality = 1.0/((now - yahoo_data_last_update_dt).days // 7 + 1)
             print(f"Successfully calculated data quality for freeCashFlow: {self.data_quality}")
         except ValueError:
             print(f"Invalid last update format for freeCashFlow metric: {yahoo_data.get('lastUpdate', 'N/A')}")

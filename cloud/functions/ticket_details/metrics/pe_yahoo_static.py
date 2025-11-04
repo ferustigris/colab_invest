@@ -1,24 +1,24 @@
-from financial_metric import FinancialMetric
 from datetime import datetime, timedelta
+from financial_metric import FinancialMetric
 
 
-class Cash(FinancialMetric):
+class PeYahooStatic(FinancialMetric):
     def __init__(self):
         super().__init__(
-            "cash",
+            "pe",
             0,
-            "Cash and cash equivalents on balance sheet",
+            "Price-to-earnings ratio based on trailing twelve months",
             0,
             "1970-01-01T00:00:00Z"
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        print(f"Loading data for cash metric for ticker {stock_details.ticker}")
-        
-        if not 'totalCash' in yahoo_data:
-            print(f"totalCash data not available for {stock_details.ticker}")
+        print(f"Loading data for PE metric for ticker {stock_details.ticker}")
+
+        if not yahoo_data.get('trailingPE'):
+            print(f"trailingPE data not available for {stock_details.ticker}")
             self.data_quality = 0.0
-            self.comment += " - totalCash data not available"
+            self.comment += " - trailingPE data not available"
             return
 
         now = datetime.now()
@@ -27,14 +27,14 @@ class Cash(FinancialMetric):
             yahoo_data_last_update_dt = datetime.strptime(yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
             self.data_quality = 1.0/((now - yahoo_data_last_update_dt).days // 7 + 1)
-            print(f"Successfully calculated data quality for cash: {self.data_quality}")
+            print(f"Successfully calculated data quality for trailingPE: {self.data_quality}")
         except ValueError:
-            print(f"Invalid last update format for cash metric: {yahoo_data.get('lastUpdate', 'N/A')}")
+            print(f"Invalid last update format for trailingPE metric: {yahoo_data.get('lastUpdate', 'N/A')}")
             self.data_quality = 0.1
             self.comment += " - invalid last update format"
             return
 
         self.comment += " - last update on " + yahoo_data['lastUpdate']
-        self.value = yahoo_data['totalCash']
+        self.value = yahoo_data['trailingPE']
         self.last_update = yahoo_data['lastUpdate']
-        print(f"Cash metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        print(f"trailingPE metric loaded successfully: value={self.value}, quality={self.data_quality}")

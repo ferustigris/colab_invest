@@ -34,9 +34,18 @@ class _TicketsTableState extends State<TicketsTable> {
 
     TicketService.getTicketsStream().listen(
       (ticketsList) {
+        print('Stream update received: ${ticketsList.length} tickets');
         setState(() {
-          tickets = ticketsList;
-          loadedCount = ticketsList.length;
+          // Добавляем только новые тикеты (последний элемент)
+          if (ticketsList.length > tickets.length) {
+            final newTickets = ticketsList.sublist(tickets.length);
+            print('Adding ${newTickets.length} new tickets');
+            for (final ticket in newTickets) {
+              print('Adding ticket: ${ticket.ticker}');
+            }
+            tickets.addAll(newTickets);
+            loadedCount = tickets.length;
+          }
         });
       },
       onError: (error) {
@@ -183,6 +192,19 @@ class _TicketsTableState extends State<TicketsTable> {
     return Colors.red;
   }
 
+  Color _getProfitGrowthBorderColor(Ticket ticket) {
+    final growth = ticket.profitGrowth10Years;
+    final quality = ticket.dataQuality['profitGrowth10Years'] ?? 1.0;
+
+    // Если качество низкое, возвращаем красный
+    if (quality < 0.7) {
+      return Colors.red;
+    }
+
+    // Иначе используем стандартную логику
+    return _getProfitGrowthColor(growth);
+  }
+
   Color _getPEColor(Ticket ticket) {
     final pe = ticket.pe;
     final quality = ticket.dataQuality['pe'] ?? 1.0;
@@ -206,9 +228,38 @@ class _TicketsTableState extends State<TicketsTable> {
     return Colors.red;
   }
 
+  DataCell _buildDataCellWithTooltip({
+    required Widget child,
+    required Ticket ticket,
+    required String metricName,
+  }) {
+    final comment = ticket.comments[metricName] ?? '';
+    final quality = ticket.dataQuality[metricName] ?? 1.0;
+
+    Widget cellChild = child;
+
+    // Если качество ниже 0.7, добавляем красную рамку
+    if (quality < 0.7) {
+      cellChild = Container(
+        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.red, width: 1),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: child,
+      );
+    }
+
+    if (comment.isNotEmpty) {
+      return DataCell(Tooltip(message: comment, child: cellChild));
+    } else {
+      return DataCell(cellChild);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    if (isLoading && tickets.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -257,7 +308,14 @@ class _TicketsTableState extends State<TicketsTable> {
               SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: _loadTicketsStream,
-                icon: Icon(Icons.refresh, size: 16),
+                icon:
+                    isLoading
+                        ? SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : Icon(Icons.refresh, size: 16),
                 label: Text(
                   isLoading && tickets.isNotEmpty
                       ? 'Loading $loadedCount...'
@@ -290,7 +348,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Ticker',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -300,7 +358,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Name',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -310,7 +368,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Price',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -321,8 +379,9 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Shares',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
                     onSort: _onSort,
@@ -332,8 +391,9 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Revenue',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
                     onSort: _onSort,
@@ -343,8 +403,9 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Net Inc',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
                     onSort: _onSort,
@@ -354,8 +415,9 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Debt',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
                     onSort: _onSort,
@@ -365,7 +427,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'SMA',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -376,7 +438,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'F.DIV',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -387,7 +449,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'F.PE',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -398,7 +460,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'F.Eq',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -409,7 +471,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Growth',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -420,7 +482,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'P/E',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -431,7 +493,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'FPE',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -442,7 +504,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'FCF%',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -453,7 +515,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Buy%',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -464,7 +526,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Div%',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -475,7 +537,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     label: Text(
                       'Act',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -496,7 +558,7 @@ class _TicketsTableState extends State<TicketsTable> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blue,
-                                fontSize: 11,
+                                fontSize: 12,
                               ),
                             ),
                           ),
@@ -506,37 +568,49 @@ class _TicketsTableState extends State<TicketsTable> {
                               child: Text(
                                 ticket.name,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 10),
+                                style: TextStyle(fontSize: 11),
                               ),
                             ),
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               "\$" +
                                   _formatNumber(
                                     ticket.currentPrice,
                                     decimals: 2,
                                   ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'currentPrice',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.sharesOutstanding! / 1000_000_000,
                                 decimals: 2,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
+                            ticket: ticket,
+                            metricName: 'sharesOutstanding',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.revenue! / 1000_000_000,
                                 decimals: 2,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
+                            ticket: ticket,
+                            metricName: 'revenue',
                           ),
                           DataCell(
                             Text(
@@ -544,53 +618,69 @@ class _TicketsTableState extends State<TicketsTable> {
                                 ticket.netIncome! / 1000_000_000,
                                 decimals: 2,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.totalDebt! / 1000_000_000,
                                 decimals: 2,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
+                            ticket: ticket,
+                            metricName: 'totalDebt',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(ticket.sma10Years, decimals: 0),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'sma10Years',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.priceForecastDiv,
                                 decimals: 0,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'priceForecastDiv',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.priceForecastPE,
                                 decimals: 0,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'priceForecastPE',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.priceForecastEquity,
                                 decimals: 0,
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'priceForecastEquity',
                           ),
-                          DataCell(
-                            Container(
+                          _buildDataCellWithTooltip(
+                            child: Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 4,
                                 vertical: 2,
@@ -601,9 +691,7 @@ class _TicketsTableState extends State<TicketsTable> {
                                 ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: _getProfitGrowthColor(
-                                    ticket.profitGrowth10Years,
-                                  ),
+                                  color: _getProfitGrowthBorderColor(ticket),
                                   width: 1,
                                 ),
                               ),
@@ -622,52 +710,64 @@ class _TicketsTableState extends State<TicketsTable> {
                                 ),
                               ),
                             ),
+                            ticket: ticket,
+                            metricName: 'profitGrowth10Years',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(ticket.pe, decimals: 0),
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: _getPEColor(ticket),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                            ticket: ticket,
+                            metricName: 'pe',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(ticket.fpe, decimals: 0),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'fpe',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.freeCashFlowPerStock,
                                 decimals: 1,
                                 suffix: '%',
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'freeCashFlowPerStock',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.buybackPercent,
                                 decimals: 1,
                                 suffix: '%',
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'buybackPercent',
                           ),
-                          DataCell(
-                            Text(
+                          _buildDataCellWithTooltip(
+                            child: Text(
                               _formatNumber(
                                 ticket.dividendYield,
                                 decimals: 1,
                                 suffix: '%',
                               ),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 12),
                             ),
+                            ticket: ticket,
+                            metricName: 'dividendYield',
                           ),
                           DataCell(
                             Row(
@@ -851,7 +951,11 @@ class _TicketsTableState extends State<TicketsTable> {
     );
   }
 
-  Widget _buildDetailRowWithColor(String label, String value, Color valueColor) {
+  Widget _buildDetailRowWithColor(
+    String label,
+    String value,
+    Color valueColor,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -860,10 +964,7 @@ class _TicketsTableState extends State<TicketsTable> {
           Text('$label:', style: TextStyle(fontWeight: FontWeight.bold)),
           Text(
             value,
-            style: TextStyle(
-              color: valueColor,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(color: valueColor, fontWeight: FontWeight.w500),
           ),
         ],
       ),

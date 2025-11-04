@@ -1,25 +1,20 @@
-from financial_metric import FinancialMetric
+from datetime import datetime, timedelta
+from functools import reduce
+from metrics.metrics_compositor import MetricsCompositor
+from metrics.pe_calculated import PeCalculated
+from metrics.pe_yahoo_static import PeYahooStatic
 
 
-class Pe(FinancialMetric):
+class Pe(MetricsCompositor):
     def __init__(self):
         super().__init__(
             "pe",
             0,
             "Price-to-earnings ratio based on trailing twelve months",
             0,
-            "1970-01-01T00:00:00Z"
+            "1970-01-01T00:00:00Z",
+            [
+                PeCalculated(),
+                PeYahooStatic()
+            ]
         )
-    
-    def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for pe metric for ticker {stock_details.ticker}")
-        
-        if 'trailingPE' in yahoo_data:
-            self.value = yahoo_data['trailingPE']
-            self.data_quality = 0.6  # Good quality calculated ratio
-            self.last_update = int(time.time())
-            print(f"PE metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"trailingPE data not available for {stock_details.ticker}")
-            self.data_quality = 0.0
