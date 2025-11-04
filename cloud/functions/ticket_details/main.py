@@ -5,6 +5,7 @@ import requests
 from pathlib import Path
 from urllib.parse import urlparse
 from stock_details import StockDetails
+import os
 
 @cors_headers
 @cross_origin(allowed_methods=['POST', 'GET', 'OPTIONS'], origins='*')
@@ -17,6 +18,7 @@ def ticket_details(request, user):
     """
     Returns detailed information for a specific stock ticker
     """
+    yahoo_url = os.environ.get("YAHOO_URL")
 
     path = urlparse(request.url).path
     ticker = Path(path).name
@@ -24,6 +26,12 @@ def ticket_details(request, user):
 
     # Create stock details instance and return JSON
     stock_details = StockDetails(ticker)
+
+    response = requests.get(f"{yahoo_url}/{ticker}", headers=request.headers)
+    response.raise_for_status()
+    yahoo_data = response.json()
+
+    stock_details.update_from_yahoo_data(yahoo_data)
     
     return stock_details.to_json()
 

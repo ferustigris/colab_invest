@@ -16,11 +16,41 @@ class _TicketsTableState extends State<TicketsTable> {
   int? sortColumnIndex;
   bool isAscending = true;
   String searchQuery = '';
+  int loadedCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadTickets();
+    _loadTicketsStream();
+  }
+
+  void _loadTicketsStream() {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+      tickets.clear();
+      loadedCount = 0;
+    });
+
+    TicketService.getTicketsStream().listen(
+      (ticketsList) {
+        setState(() {
+          tickets = ticketsList;
+          loadedCount = ticketsList.length;
+        });
+      },
+      onError: (error) {
+        setState(() {
+          errorMessage = error.toString();
+          isLoading = false;
+        });
+      },
+      onDone: () {
+        setState(() {
+          isLoading = false;
+        });
+      },
+    );
   }
 
   Future<void> _loadTickets() async {
@@ -153,6 +183,29 @@ class _TicketsTableState extends State<TicketsTable> {
     return Colors.red;
   }
 
+  Color _getPEColor(Ticket ticket) {
+    final pe = ticket.pe;
+    final quality = ticket.dataQuality['pe'] ?? 1.0;
+
+    // Красный если ниже нуля или качество ниже 0.7
+    if (pe == null || pe < 0 || quality < 0.7) {
+      return Colors.red;
+    }
+
+    // Зеленый для 0-10
+    if (pe >= 0 && pe <= 10) {
+      return Colors.green;
+    }
+
+    // Желтый для 10-15
+    if (pe > 10 && pe <= 15) {
+      return Colors.orange;
+    }
+
+    // Красный для остальных случаев (>15)
+    return Colors.red;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -203,9 +256,14 @@ class _TicketsTableState extends State<TicketsTable> {
               ),
               SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed: _loadTickets,
+                onPressed: _loadTicketsStream,
                 icon: Icon(Icons.refresh, size: 16),
-                label: Text('Refresh', style: TextStyle(fontSize: 11)),
+                label: Text(
+                  isLoading && tickets.isNotEmpty
+                      ? 'Loading $loadedCount...'
+                      : 'Refresh',
+                  style: TextStyle(fontSize: 11),
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 ),
@@ -454,34 +512,47 @@ class _TicketsTableState extends State<TicketsTable> {
                           ),
                           DataCell(
                             Text(
-                              _formatNumber(ticket.currentPrice, decimals: 0),
+                              "\$" +
+                                  _formatNumber(
+                                    ticket.currentPrice,
+                                    decimals: 2,
+                                  ),
                               style: TextStyle(fontSize: 11),
                             ),
                           ),
                           DataCell(
                             Text(
                               _formatNumber(
-                                ticket.sharesOutstanding,
-                                decimals: 1,
+                                ticket.sharesOutstanding! / 1000_000_000,
+                                decimals: 2,
                               ),
                               style: TextStyle(fontSize: 11),
                             ),
                           ),
                           DataCell(
                             Text(
-                              _formatNumber(ticket.revenue, decimals: 0),
+                              _formatNumber(
+                                ticket.revenue! / 1000_000_000,
+                                decimals: 2,
+                              ),
                               style: TextStyle(fontSize: 11),
                             ),
                           ),
                           DataCell(
                             Text(
-                              _formatNumber(ticket.netIncome, decimals: 0),
+                              _formatNumber(
+                                ticket.netIncome! / 1000_000_000,
+                                decimals: 2,
+                              ),
                               style: TextStyle(fontSize: 11),
                             ),
                           ),
                           DataCell(
                             Text(
-                              _formatNumber(ticket.totalDebt, decimals: 0),
+                              _formatNumber(
+                                ticket.totalDebt! / 1000_000_000,
+                                decimals: 2,
+                              ),
                               style: TextStyle(fontSize: 11),
                             ),
                           ),
@@ -555,7 +626,11 @@ class _TicketsTableState extends State<TicketsTable> {
                           DataCell(
                             Text(
                               _formatNumber(ticket.pe, decimals: 0),
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: _getPEColor(ticket),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                           DataCell(
@@ -673,9 +748,10 @@ class _TicketsTableState extends State<TicketsTable> {
                     'EBITDA',
                     _formatNumber(ticket.ebitda, suffix: 'B'),
                   ),
-                  _buildDetailRow(
+                  _buildDetailRowWithColor(
                     'P/E Ratio',
                     _formatNumber(ticket.pe, decimals: 1),
+                    _getPEColor(ticket),
                   ),
                   _buildDetailRow(
                     'FPE',
@@ -770,6 +846,25 @@ class _TicketsTableState extends State<TicketsTable> {
         children: [
           Text('$label:', style: TextStyle(fontWeight: FontWeight.bold)),
           Text(value),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRowWithColor(String label, String value, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('$label:', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );

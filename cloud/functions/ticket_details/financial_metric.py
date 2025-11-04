@@ -15,7 +15,7 @@ class FinancialMetric:
             "lastUpdate": self.last_update
         }
     
-    def get_load_for_ticker(self, ticker, json_data):
+    def get_load_for_ticker(self, ticker_data, json_yahoo_data):
         """
         Load financial metric data for a specific ticker from JSON data
         """

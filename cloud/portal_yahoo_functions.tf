@@ -59,6 +59,8 @@ resource "google_cloudfunctions_function" "ticket_details_function" {
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
     TELEGRAM_CHAT_ID = "5081253547"
     CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
+    YAHOO_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/yahoo"
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
   }
   depends_on = [
     google_storage_bucket_object.ticket_details_source,

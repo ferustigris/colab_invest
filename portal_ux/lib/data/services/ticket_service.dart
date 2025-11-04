@@ -5,6 +5,73 @@ import 'package:portal_ux/data/models/ticket.dart';
 import 'package:portal_ux/data/app_constants.dart';
 
 class TicketService {
+  /// Stream-based метод для progressive loading тикетов
+  static Stream<List<Ticket>> getTicketsStream() async* {
+    List<Ticket> currentTickets = [];
+
+    try {
+      // Получаем текущего пользователя и его токен
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final idToken = await user.getIdToken();
+
+      // Шаг 1: Получаем список тикеров
+      final tickersResponse = await http.get(
+        Uri.parse(AppConstants.cloudUrlTickets),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      );
+
+      if (tickersResponse.statusCode != 200) {
+        throw Exception(
+          'Failed to load tickers list: ${tickersResponse.statusCode}',
+        );
+      }
+
+      final List<dynamic> tickersData = json.decode(tickersResponse.body);
+      final List<String> tickers = tickersData.cast<String>();
+
+      // Шаг 2: Для каждого тикера получаем полную информацию и эмитим обновление
+      for (String ticker in tickers) {
+        try {
+          final ticket = await getTicketDetails(ticker);
+          currentTickets.add(ticket);
+          yield List.from(currentTickets); // Эмитим копию текущего списка
+        } catch (e) {
+          // Пропускаем тикеры с ошибками, но продолжаем загрузку остальных
+          print('Failed to load $ticker: $e');
+        }
+      }
+    } catch (e) {
+      // Если не удалось получить список тикеров, используем mock данные
+      print('Failed to get tickers list, using mock data: $e');
+
+      final List<String> mockTickers = _getMockTickers();
+
+      for (String ticker in mockTickers) {
+        try {
+          final ticket = await getTicketDetails(ticker);
+          currentTickets.add(ticket);
+          yield List.from(currentTickets);
+        } catch (detailError) {
+          // Используем mock данные если API недоступен
+          print('Using mock data for $ticker due to error: $detailError');
+          final mockTicket = _getMockTicketDetails(ticker);
+          print(
+            'Mock ticket created: ${mockTicket.ticker} - ${mockTicket.name}',
+          );
+          currentTickets.add(mockTicket);
+          yield List.from(currentTickets);
+        }
+      }
+    }
+  }
+
   static Future<List<Ticket>> getTickets() async {
     try {
       // Получаем текущего пользователя и его токен
@@ -140,6 +207,8 @@ class TicketService {
         return Ticket(
           ticker: 'AAPL',
           name: 'Apple Inc.',
+          summary:
+              'Leading technology company known for innovative consumer electronics',
           profitGrowth10Years: 15.2,
           currentPrice: 189.50,
           sharesOutstanding: 15.55,
@@ -170,6 +239,8 @@ class TicketService {
         return Ticket(
           ticker: 'MSFT',
           name: 'Microsoft Corporation',
+          summary:
+              'Global technology leader in cloud computing, productivity software, and business solutions',
           profitGrowth10Years: 18.7,
           currentPrice: 415.20,
           sharesOutstanding: 7.43,
@@ -200,6 +271,8 @@ class TicketService {
         return Ticket(
           ticker: 'GOOGL',
           name: 'Alphabet Inc.',
+          summary:
+              'Parent company of Google, leading in search, advertising, and emerging technologies',
           profitGrowth10Years: 22.3,
           currentPrice: 142.30,
           sharesOutstanding: 12.61,
@@ -230,6 +303,8 @@ class TicketService {
         return Ticket(
           ticker: 'NVDA',
           name: 'NVIDIA Corporation',
+          summary:
+              'Leading graphics and AI computing company powering gaming, data centers, and autonomous vehicles',
           profitGrowth10Years: 45.8,
           currentPrice: 135.40,
           sharesOutstanding: 24.69,
