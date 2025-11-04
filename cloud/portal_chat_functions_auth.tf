@@ -79,3 +79,9 @@ resource "google_cloudfunctions_function_iam_member" "chat_history_function_invo
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
 }
+
+resource "google_storage_bucket_iam_member" "chat_history_function_storage_access" {
+  bucket = google_storage_bucket.chat_history.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_cloudfunctions_function.chat_history_function.service_account_email}"
+}

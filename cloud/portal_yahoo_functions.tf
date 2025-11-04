@@ -78,3 +78,86 @@ resource "google_storage_bucket_object" "ticket_details_source" {
   bucket = google_storage_bucket.src_bucket.name
   source = data.archive_file.ticket_details_function_dist.output_path
 }
+
+
+
+resource "google_cloudfunctions_function" "yahoo_function" {
+  name        = "yahoo"
+  description = "Ask assistant for help"
+  region      = "europe-west1"
+  entry_point = "yahoo"
+
+  runtime = "python311"
+
+  source_archive_bucket = google_storage_bucket.src_bucket.name
+  source_archive_object = google_storage_bucket_object.yahoo_source.name
+
+  trigger_http = true
+  service_account_email = google_service_account.default_compute.email
+
+  environment_variables = {
+    GOOGLE_FUNCTION_SOURCE = "main.py"
+    GCLOUD_PROJECT = data.google_project.project.project_id
+    GCLOUD_PROJECT_NUMBER = data.google_project.project.number
+    TELEGRAM_CHAT_ID = "5081253547"
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
+  }
+  depends_on = [
+    google_storage_bucket_object.yahoo_source,
+    google_service_account.default_compute
+  ]
+}
+
+data "archive_file" "yahoo_function_dist" {
+  type        = "zip"
+  source_dir  = "./functions/yahoo"
+  output_path = "function/yahoo_dist${local.always_trigger}.zip"
+  depends_on = [local.always_trigger]
+}
+
+resource "google_storage_bucket_object" "yahoo_source" {
+  name   = "yahoo-source.${data.archive_file.yahoo_function_dist.output_md5}.zip"
+  bucket = google_storage_bucket.src_bucket.name
+  source = data.archive_file.yahoo_function_dist.output_path
+}
+
+
+
+resource "google_cloudfunctions_function" "history_function" {
+  name        = "history"
+  description = "Ask assistant for help"
+  region      = "europe-west1"
+  entry_point = "history"
+
+  runtime = "python311"
+
+  source_archive_bucket = google_storage_bucket.src_bucket.name
+  source_archive_object = google_storage_bucket_object.history_source.name
+
+  trigger_http = true
+  service_account_email = google_service_account.default_compute.email
+
+  environment_variables = {
+    GOOGLE_FUNCTION_SOURCE = "main.py"
+    GCLOUD_PROJECT = data.google_project.project.project_id
+    GCLOUD_PROJECT_NUMBER = data.google_project.project.number
+    CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
+  }
+  depends_on = [
+    google_storage_bucket_object.history_source,
+    google_service_account.default_compute
+  ]
+}
+
+data "archive_file" "history_function_dist" {
+  type        = "zip"
+  source_dir  = "./functions/history"
+  output_path = "function/history_dist${local.always_trigger}.zip"
+  depends_on = [local.always_trigger]
+}
+
+resource "google_storage_bucket_object" "history_source" {
+  name   = "history-source.${data.archive_file.history_function_dist.output_md5}.zip"
+  bucket = google_storage_bucket.src_bucket.name
+  source = data.archive_file.history_function_dist.output_path
+}

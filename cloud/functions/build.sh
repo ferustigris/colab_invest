@@ -14,6 +14,9 @@ for FUNCTION in ./*; do
     echo "Function directory $FUNCTION does not exist, skipping..."
     continue
   fi
+  if [ "$FUNCTION" == "./colab_utils" ]; then
+    continue
+  fi
   echo "Building function: $FUNCTION"
   cd "$FUNCTION" 
   poetry lock
