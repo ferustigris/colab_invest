@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colab-utils"
-version = "0.0.11"
+version = "0.0.12"
 description = "Utils for Solvia project"
 authors = ["Andrey Kuznetsov <andrey_kuznetsov@epam.com>"]
 packages = [
@@ -9,7 +9,7 @@ packages = [
 
 [[tool.poetry.source]]
 name = "gcp"
-url = "https://europe-southwest1-python.pkg.dev/colab-invest-helper/simple/simple/"
+url = "https://europe-southwest1-python.pkg.dev/colab-invest-helper/simple/"
 priority = "primary"
 
 [tool.poetry.dependencies]

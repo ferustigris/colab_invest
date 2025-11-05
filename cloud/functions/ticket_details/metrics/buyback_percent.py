@@ -1,3 +1,5 @@
+import os
+import requests
 from financial_metric import FinancialMetric
 
 
@@ -12,14 +14,15 @@ class BuybackPercent(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for buyback percent metric for ticker {stock_details.ticker}")
-        # Use sharesPercentSharesOut if available (short interest proxy)
-        if 'sharesPercentSharesOut' in yahoo_data:
-            self.value = yahoo_data['sharesPercentSharesOut'] * 100  # Convert to percentage
-            self.data_quality = 0.3  # Low quality - using short interest as proxy
-            self.last_update = int(time.time())
-            print(f"BuybackPercent metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"sharesPercentSharesOut data not available for {stock_details.ticker}")
-            self.data_quality = 0.0
+        get_metric_url = os.environ.get("GET_METRIC_URL")
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(f"{get_metric_url}/{stock_details.ticker}", headers=headers, json={
+            "metric": self.name
+        })
+        response.raise_for_status()
+
+        self.value = response.text
+        self.data_quality = 0.7

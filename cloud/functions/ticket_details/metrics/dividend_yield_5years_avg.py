@@ -2,23 +2,23 @@ from financial_metric import FinancialMetric
 from datetime import datetime, timedelta
 
 
-class Revenue(FinancialMetric):
+class FiveYearAvgDividendYield(FinancialMetric):
     def __init__(self):
         super().__init__(
-            "revenue",
+            "fiveYearAvgDividendYield",
             0,
-            "Total revenue for the last twelve months",
+            "Dividend yield as percentage of current stock price",
             0,
             "1970-01-01T00:00:00Z"
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
-        
-        if not 'totalRevenue' in yahoo_data:
-            print(f"totalRevenue data not available for {stock_details.ticker}")
+
+        if not yahoo_data.get('fiveYearAvgDividendYield'):
+            print(f"fiveYearAvgDividendYield data not available for {stock_details.ticker}")
             self.data_quality = 0.0
-            self.comment += "\n - totalRevenue data not available"
+            self.comment += "\n - fiveYearAvgDividendYield data not available"
             return
 
         now = datetime.now()
@@ -36,6 +36,6 @@ class Revenue(FinancialMetric):
 
         self.comment += "\n - last update on " + yahoo_data['lastUpdate']
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
-        self.value = yahoo_data['totalRevenue']
+        self.value = yahoo_data['fiveYearAvgDividendYield'] / 100 # Already percentage
         self.last_update = yahoo_data['lastUpdate']
         print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")

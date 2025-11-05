@@ -4,7 +4,7 @@ class Ticket {
   final String? summary; // краткое описание компании
   final double? profitGrowth10Years; // рост прибыли за последние 10 лет
   final double? currentPrice; // цена
-  final double? sharesOutstanding; // кол-во акций, млрд
+  final double? shares; // кол-во акций, млрд
   final double? sma10Years; // SMA 10 years
   final double? priceForecastDiv; // Price forecast DIV based
   final double? priceForecastPE; // Price forecast PE based
@@ -20,7 +20,7 @@ class Ticket {
   final double? totalDebt; // Total Debt, млрд
   final double? debtEbitda; // Debt/EBITDA
   final double? cash; // Cash, B
-  final double? dividendYield; // Div, %
+  final double? dividend; // Div, %
   final double? peRatio; // PE
   final double? fpe; // FPE
   final double? freeCashFlow; // free Cash flow
@@ -39,7 +39,7 @@ class Ticket {
     this.summary,
     this.profitGrowth10Years,
     this.currentPrice,
-    this.sharesOutstanding,
+    this.shares,
     this.sma10Years,
     this.priceForecastDiv,
     this.priceForecastPE,
@@ -55,7 +55,7 @@ class Ticket {
     this.totalDebt,
     this.debtEbitda,
     this.cash,
-    this.dividendYield,
+    this.dividend,
     this.peRatio,
     this.fpe,
     this.freeCashFlow,
@@ -89,8 +89,8 @@ class Ticket {
         dataQuality,
         lastUpdates,
       ),
-      sharesOutstanding: _parseMetricValue(
-        json['sharesOutstanding'],
+      shares: _parseMetricValue(
+        json['shares'],
         comments,
         dataQuality,
         lastUpdates,
@@ -165,8 +165,8 @@ class Ticket {
         lastUpdates,
       ),
       cash: _parseMetricValue(json['cash'], comments, dataQuality, lastUpdates),
-      dividendYield: _parseMetricValue(
-        json['dividendYield'],
+      dividend: _parseMetricValue(
+        json['dividend'],
         comments,
         dataQuality,
         lastUpdates,
@@ -267,7 +267,7 @@ class Ticket {
       'summary': summary,
       'profitGrowth10Years': profitGrowth10Years,
       'currentPrice': currentPrice,
-      'sharesOutstanding': sharesOutstanding,
+      'shares': shares,
       'sma10Years': sma10Years,
       'priceForecastDiv': priceForecastDiv,
       'priceForecastPE': priceForecastPE,
@@ -283,7 +283,7 @@ class Ticket {
       'totalDebt': totalDebt,
       'debtEbitda': debtEbitda,
       'cash': cash,
-      'dividendYield': dividendYield,
+      'dividend': dividend,
       'peRatio': peRatio,
       'fpe': fpe,
       'freeCashFlow': freeCashFlow,

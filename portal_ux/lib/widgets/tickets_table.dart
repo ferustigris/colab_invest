@@ -99,65 +99,69 @@ class _TicketsTableState extends State<TicketsTable> {
             aValue = a.name;
             bValue = b.name;
             break;
-          case 2: // Current Price
-            aValue = a.currentPrice ?? 0;
-            bValue = b.currentPrice ?? 0;
-            break;
-          case 3: // Shares Outstanding
-            aValue = a.sharesOutstanding ?? 0;
-            bValue = b.sharesOutstanding ?? 0;
-            break;
-          case 4: // Revenue
-            aValue = a.revenue ?? 0;
-            bValue = b.revenue ?? 0;
-            break;
-          case 5: // Net Income
-            aValue = a.netIncome ?? 0;
-            bValue = b.netIncome ?? 0;
-            break;
-          case 6: // Total Debt
-            aValue = a.totalDebt ?? 0;
-            bValue = b.totalDebt ?? 0;
-            break;
-          case 7: // SMA 10Y
-            aValue = a.sma10Years ?? 0;
-            bValue = b.sma10Years ?? 0;
-            break;
-          case 8: // Forecast DIV
-            aValue = a.priceForecastDiv ?? 0;
-            bValue = b.priceForecastDiv ?? 0;
-            break;
-          case 9: // Forecast PE
-            aValue = a.priceForecastPE ?? 0;
-            bValue = b.priceForecastPE ?? 0;
-            break;
-          case 10: // Forecast Equity
-            aValue = a.priceForecastEquity ?? 0;
-            bValue = b.priceForecastEquity ?? 0;
-            break;
-          case 11: // Profit Growth 10Y
+          case 2: // Growth
             aValue = a.profitGrowth10Years ?? 0;
             bValue = b.profitGrowth10Years ?? 0;
             break;
-          case 12: // P/E
+          case 3: // Price
+            aValue = a.currentPrice ?? 0;
+            bValue = b.currentPrice ?? 0;
+            break;
+          case 4: // SMA 10Y
+            aValue = a.sma10Years ?? 0;
+            bValue = b.sma10Years ?? 0;
+            break;
+          case 5: // Shares Outstanding
+            aValue = a.shares ?? 0;
+            bValue = b.shares ?? 0;
+            break;
+          case 6: // Revenue
+            aValue = a.revenue ?? 0;
+            bValue = b.revenue ?? 0;
+            break;
+          case 7: // Net Income
+            aValue = a.netIncome ?? 0;
+            bValue = b.netIncome ?? 0;
+            break;
+          case 8: // Total Debt
+            aValue = a.totalDebt ?? 0;
+            bValue = b.totalDebt ?? 0;
+            break;
+          case 9: // NTA
+            aValue = a.nta ?? 0;
+            bValue = b.nta ?? 0;
+            break;
+          case 10: // Forecast DIV
+            aValue = a.priceForecastDiv ?? 0;
+            bValue = b.priceForecastDiv ?? 0;
+            break;
+          case 11: // Forecast PE
+            aValue = a.priceForecastPE ?? 0;
+            bValue = b.priceForecastPE ?? 0;
+            break;
+          case 12: // Forecast Equity
+            aValue = a.priceForecastEquity ?? 0;
+            bValue = b.priceForecastEquity ?? 0;
+            break;
+          case 13: // P/E
             aValue = a.pe ?? 0;
             bValue = b.pe ?? 0;
             break;
-          case 13: // FPE
+          case 14: // FPE
             aValue = a.fpe ?? 0;
             bValue = b.fpe ?? 0;
             break;
-          case 14: // Free Cash Flow per Stock
+          case 15: // Free Cash Flow per Stock
             aValue = a.freeCashFlowPerStock ?? 0;
             bValue = b.freeCashFlowPerStock ?? 0;
             break;
-          case 15: // Buyback Percent
+          case 16: // Buyback Percent
             aValue = a.buybackPercent ?? 0;
             bValue = b.buybackPercent ?? 0;
             break;
-          case 16: // Dividend Yield
-            aValue = a.dividendYield ?? 0;
-            bValue = b.dividendYield ?? 0;
+          case 17: // Dividend
+            aValue = a.dividend ?? 0;
+            bValue = b.dividend ?? 0;
             break;
           default:
             return 0;
@@ -207,10 +211,9 @@ class _TicketsTableState extends State<TicketsTable> {
 
   Color _getPEColor(Ticket ticket) {
     final pe = ticket.pe;
-    final quality = ticket.dataQuality['pe'] ?? 1.0;
 
     // Красный если ниже нуля или качество ниже 0.7
-    if (pe == null || pe < 0 || quality < 0.7) {
+    if (pe == null || pe < 0) {
       return Colors.red;
     }
 
@@ -228,6 +231,43 @@ class _TicketsTableState extends State<TicketsTable> {
     return Colors.red;
   }
 
+  Color _getForecastColor(double? forecast, double? currentPrice) {
+    if (forecast == null || currentPrice == null || currentPrice <= 0) {
+      return Colors.grey;
+    }
+
+    final ratio = currentPrice / forecast;
+
+    // Зеленый: значение меньше текущей цены на 20% (менее 80%)
+    if (ratio < 0.8 && ratio > 0) {
+      return Colors.green;
+    }
+
+    // Желтый: значение между 80% и 150% от текущей цены
+    if (ratio >= 0.8 && ratio <= 1.5) {
+      return Colors.orange;
+    }
+
+    // Красный в других случаях (больше 150%)
+    return Colors.red;
+  }
+
+  Color _getForecastBorderColor(
+    Ticket ticket,
+    String metricName,
+    double? forecast,
+  ) {
+    final quality = ticket.dataQuality[metricName] ?? 1.0;
+
+    // Если качество низкое, возвращаем красный
+    if (quality < 0.7) {
+      return Colors.red;
+    }
+
+    // Иначе используем логику прогноза
+    return _getForecastColor(forecast, ticket.currentPrice);
+  }
+
   DataCell _buildDataCellWithTooltip({
     required Widget child,
     required Ticket ticket,
@@ -243,7 +283,10 @@ class _TicketsTableState extends State<TicketsTable> {
       cellChild = Container(
         padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 1),
+          border: Border.all(
+            color: quality < 0.5 ? Colors.red : Colors.yellow,
+            width: 1,
+          ),
           borderRadius: BorderRadius.circular(4),
         ),
         child: child,
@@ -366,7 +409,29 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   DataColumn(
                     label: Text(
+                      'Growth',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
                       'Price',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'SMA',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -425,10 +490,11 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   DataColumn(
                     label: Text(
-                      'SMA',
+                      'NTA',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
                     onSort: _onSort,
@@ -469,17 +535,6 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   DataColumn(
                     label: Text(
-                      'Growth',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onSort: _onSort,
-                    numeric: true,
-                  ),
-                  DataColumn(
-                    label: Text(
                       'P/E',
                       style: TextStyle(
                         fontSize: 13,
@@ -502,7 +557,7 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   DataColumn(
                     label: Text(
-                      'FCF%',
+                      'Cash%',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -573,113 +628,6 @@ class _TicketsTableState extends State<TicketsTable> {
                             ),
                           ),
                           _buildDataCellWithTooltip(
-                            child: Text(
-                              "\$" +
-                                  _formatNumber(
-                                    ticket.currentPrice,
-                                    decimals: 2,
-                                  ),
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            ticket: ticket,
-                            metricName: 'currentPrice',
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(
-                                ticket.sharesOutstanding! / 1000_000_000,
-                                decimals: 2,
-                              ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            ticket: ticket,
-                            metricName: 'sharesOutstanding',
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(
-                                ticket.revenue! / 1000_000_000,
-                                decimals: 2,
-                              ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            ticket: ticket,
-                            metricName: 'revenue',
-                          ),
-                          DataCell(
-                            Text(
-                              _formatNumber(
-                                ticket.netIncome! / 1000_000_000,
-                                decimals: 2,
-                              ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(
-                                ticket.totalDebt! / 1000_000_000,
-                                decimals: 2,
-                              ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            ticket: ticket,
-                            metricName: 'totalDebt',
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(ticket.sma10Years, decimals: 0),
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            ticket: ticket,
-                            metricName: 'sma10Years',
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(
-                                ticket.priceForecastDiv,
-                                decimals: 0,
-                              ),
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            ticket: ticket,
-                            metricName: 'priceForecastDiv',
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(
-                                ticket.priceForecastPE,
-                                decimals: 0,
-                              ),
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            ticket: ticket,
-                            metricName: 'priceForecastPE',
-                          ),
-                          _buildDataCellWithTooltip(
-                            child: Text(
-                              _formatNumber(
-                                ticket.priceForecastEquity,
-                                decimals: 0,
-                              ),
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            ticket: ticket,
-                            metricName: 'priceForecastEquity',
-                          ),
-                          _buildDataCellWithTooltip(
                             child: Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 4,
@@ -712,6 +660,213 @@ class _TicketsTableState extends State<TicketsTable> {
                             ),
                             ticket: ticket,
                             metricName: 'profitGrowth10Years',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              "\$" +
+                                  _formatNumber(
+                                    ticket.currentPrice,
+                                    decimals: 2,
+                                  ),
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            ticket: ticket,
+                            metricName: 'currentPrice',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              _formatNumber(ticket.sma10Years, decimals: 0),
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            ticket: ticket,
+                            metricName: 'sma10Years',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              _formatNumber(
+                                ticket.shares! / 1000_000_000,
+                                decimals: 2,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'shares',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              _formatNumber(
+                                ticket.revenue! / 1000_000_000,
+                                decimals: 2,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'revenue',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              _formatNumber(
+                                ticket.netIncome! / 1000_000_000,
+                                decimals: 2,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'netIncome',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              _formatNumber(
+                                ticket.totalDebt! / 1000_000_000,
+                                decimals: 2,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'totalDebt',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Text(
+                              _formatNumber(
+                                ticket.nta! / 1000_000_000,
+                                decimals: 2,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'nta',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getForecastColor(
+                                  ticket.priceForecastDiv,
+                                  ticket.currentPrice,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _getForecastBorderColor(
+                                    ticket,
+                                    'priceForecastDiv',
+                                    ticket.priceForecastDiv,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _formatNumber(
+                                  ticket.priceForecastDiv,
+                                  decimals: 0,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _getForecastColor(
+                                    ticket.priceForecastDiv,
+                                    ticket.currentPrice,
+                                  ),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'priceForecastDiv',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getForecastColor(
+                                  ticket.priceForecastPE,
+                                  ticket.currentPrice,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _getForecastBorderColor(
+                                    ticket,
+                                    'priceForecastPE',
+                                    ticket.priceForecastPE,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _formatNumber(
+                                  ticket.priceForecastPE,
+                                  decimals: 0,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _getForecastColor(
+                                    ticket.priceForecastPE,
+                                    ticket.currentPrice,
+                                  ),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'priceForecastPE',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getForecastColor(
+                                  ticket.priceForecastEquity,
+                                  ticket.currentPrice,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _getForecastBorderColor(
+                                    ticket,
+                                    'priceForecastEquity',
+                                    ticket.priceForecastEquity,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _formatNumber(
+                                  ticket.priceForecastEquity,
+                                  decimals: 0,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _getForecastColor(
+                                    ticket.priceForecastEquity,
+                                    ticket.currentPrice,
+                                  ),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'priceForecastEquity',
                           ),
                           _buildDataCellWithTooltip(
                             child: Text(
@@ -760,14 +915,14 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.dividendYield,
+                                ticket.dividend! * 100,
                                 decimals: 1,
                                 suffix: '%',
                               ),
                               style: TextStyle(fontSize: 12),
                             ),
                             ticket: ticket,
-                            metricName: 'dividendYield',
+                            metricName: 'dividend',
                           ),
                           DataCell(
                             Row(
@@ -875,7 +1030,7 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   _buildDetailRow(
                     'Dividend Yield',
-                    _formatNumber(ticket.dividendYield, suffix: '%'),
+                    _formatNumber(ticket.dividend, suffix: '%'),
                   ),
                   _buildDetailRow(
                     'P/S Ratio',
@@ -886,12 +1041,8 @@ class _TicketsTableState extends State<TicketsTable> {
                     _formatNumber(ticket.evEbitda, decimals: 1),
                   ),
                   _buildDetailRow(
-                    'Dividend Yield',
-                    _formatNumber(ticket.dividendYield, suffix: '%'),
-                  ),
-                  _buildDetailRow(
                     'Shares Outstanding',
-                    _formatNumber(ticket.sharesOutstanding, suffix: 'B'),
+                    _formatNumber(ticket.shares, suffix: 'B'),
                   ),
                   _buildDetailRow(
                     'SMA 10 Years',

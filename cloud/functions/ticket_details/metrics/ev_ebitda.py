@@ -18,7 +18,7 @@ class EvEbitda(FinancialMetric):
             self.value = yahoo_data['enterpriseToEbitda']
             self.data_quality = 0.6  # Good quality calculated ratio
             self.last_update = int(time.time())
-            print(f"EvEbitda metric loaded successfully: value={self.value}, quality={self.data_quality}")
+            print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
         else:
             print(f"enterpriseToEbitda data not available for {stock_details.ticker}")
             self.data_quality = 0.0

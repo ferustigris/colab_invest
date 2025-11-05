@@ -12,19 +12,14 @@ class PriceForecastPE(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for price forecast P/E metric for ticker {stock_details.ticker}")
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
         # Use forward EPS and target P/E for forecast
-        if 'forwardEps' in yahoo_data and 'forwardPE' in yahoo_data:
-            self.value = yahoo_data['forwardEps'] * yahoo_data['forwardPE']
-            self.data_quality = 0.6  # Good quality analyst estimates
-            self.last_update = int(time.time())
-            print(f"PriceForecastPE metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        elif 'targetMeanPrice' in yahoo_data:
-            self.value = yahoo_data['targetMeanPrice']
-            self.data_quality = 0.6  # High quality analyst targets
-            self.last_update = int(time.time())
-            print(f"PriceForecastPE metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"forwardEps, forwardPE or targetMeanPrice data not available for {stock_details.ticker}")
-            self.data_quality = 0.0
+        # =(8,5+2*(POWER(C2; 1/10)-1)*100)*E2/P2
+        growth = stock_details.profit_growth_10_years.value
+        price = stock_details.current_price.value
+        pe = stock_details.pe.value
+
+        self.value = (8.5 + 2 * (pow(growth, 1/10) - 1) * 100) * price / pe
+
+        self.data_quality = stock_details.current_price.data_quality * stock_details.profit_growth_10_years.data_quality * stock_details.pe.data_quality
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"

@@ -68,16 +68,16 @@ resource "google_storage_bucket_object" "ask_sales_chat_source" {
   source = data.archive_file.ask_sales_chat_function_dist.output_path
 }
 
-resource "google_cloudfunctions_function" "ask_nvr_support_chat_function" {
-  name        = "ask-nvr-support-chat"
-  description = "Ask nvr support assistant for help"
+resource "google_cloudfunctions_function" "get_metric_function" {
+  name        = "get_metric"
+  description = "Get metric"
   region      = "europe-west1"
-  entry_point = "ask_nvr_support_chat"
+  entry_point = "get_metric"
 
   runtime = "python311"
 
   source_archive_bucket = google_storage_bucket.src_bucket.name
-  source_archive_object = google_storage_bucket_object.ask_nvr_support_chat_source.name
+  source_archive_object = google_storage_bucket_object.get_metric_source.name
 
   trigger_http = true
   service_account_email = google_service_account.default_compute.email
@@ -86,24 +86,25 @@ resource "google_cloudfunctions_function" "ask_nvr_support_chat_function" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
   }
   depends_on = [
-    google_storage_bucket_object.ask_nvr_support_chat_source,
+    google_storage_bucket_object.get_metric_source,
     google_service_account.default_compute
   ]
 }
 
-data "archive_file" "ask_nvr_support_chat_function_dist" {
+data "archive_file" "get_metric_function_dist" {
   type        = "zip"
-  source_dir  = "./functions/ask_nvr_support_chat"
-  output_path = "function/ask_nvr_support_chat_dist${local.always_trigger}.zip"
+  source_dir  = "./functions/get_metric"
+  output_path = "function/get_metric_dist${local.always_trigger}.zip"
   depends_on = [local.always_trigger]
 }
 
-resource "google_storage_bucket_object" "ask_nvr_support_chat_source" {
-  name   = "ask_nvr_support_chat-source.${data.archive_file.ask_nvr_support_chat_function_dist.output_md5}.zip"
+resource "google_storage_bucket_object" "get_metric_source" {
+  name   = "get_metric-source.${data.archive_file.get_metric_function_dist.output_md5}.zip"
   bucket = google_storage_bucket.src_bucket.name
-  source = data.archive_file.ask_nvr_support_chat_function_dist.output_path
+  source = data.archive_file.get_metric_function_dist.output_path
 }
 
 data "archive_file" "ask_chat_function_dist" {
@@ -177,6 +178,7 @@ resource "google_cloudfunctions_function" "send_to_telegram_bot" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
   }
   depends_on = [
     google_storage_bucket_object.send_to_telegram_bot_source,

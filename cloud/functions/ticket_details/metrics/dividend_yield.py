@@ -1,4 +1,5 @@
 from financial_metric import FinancialMetric
+from datetime import datetime, timedelta
 
 
 class DividendYield(FinancialMetric):
@@ -12,13 +13,29 @@ class DividendYield(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for dividend yield metric for ticker {stock_details.ticker}")
-        if 'dividendYield' in yahoo_data:
-            self.value = yahoo_data['dividendYield'] * 100  # Convert to percentage
-            self.data_quality = 0.6  # Good quality calculated yield
-            self.last_update = int(time.time())
-            print(f"DividendYield metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
+        
+        if not yahoo_data.get('dividendYield'):
             print(f"dividendYield data not available for {stock_details.ticker}")
             self.data_quality = 0.0
+            self.comment += "\n - dividendYield data not available"
+            return
+
+        now = datetime.now()
+    
+        try:
+            yahoo_data_last_update_dt = datetime.strptime(yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+            now = datetime.now()
+            self.data_quality = 1.0/((now - yahoo_data_last_update_dt).days // 7 + 1)
+            print(f"Successfully calculated data quality for {self.name}: {self.data_quality}")
+        except ValueError:
+            print(f"Invalid last update format for {self.name} metric: {yahoo_data.get('lastUpdate', 'N/A')}")
+            self.data_quality = 0.1
+            self.comment += "\n - invalid last update format"
+            return
+
+        self.comment += "\n - last update on " + yahoo_data['lastUpdate']
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"
+        self.value = yahoo_data['dividendYield'] / 100.0  # Convert percentage to decimal
+        self.last_update = yahoo_data['lastUpdate']
+        print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")

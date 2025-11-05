@@ -19,7 +19,7 @@ class FreeCashFlowPerStock(FinancialMetric):
             self.value = yahoo_data['freeCashflow'] / yahoo_data['sharesOutstanding']
             self.data_quality = 0.6  # Good quality calculated metric
             self.last_update = int(time.time())
-            print(f"FreeCashFlowPerStock metric loaded successfully: value={self.value}, quality={self.data_quality}")
+            print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
         else:
             print(f"freeCashflow or sharesOutstanding data not available for {stock_details.ticker}")
             self.data_quality = 0.0

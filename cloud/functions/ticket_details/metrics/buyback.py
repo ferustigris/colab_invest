@@ -22,7 +22,7 @@ class Buyback(FinancialMetric):
             self.value = max(0, capex * 0.3)  # Assume 30% might go to buybacks
             self.data_quality = 0.3  # Low quality approximation
             self.last_update = int(time.time())
-            print(f"Buyback metric loaded successfully: value={self.value}, quality={self.data_quality}")
+            print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
         else:
             print(f"operatingCashflow or freeCashflow data not available for {stock_details.ticker}")
             self.data_quality = 0.0

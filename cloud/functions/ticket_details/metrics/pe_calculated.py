@@ -12,7 +12,7 @@ class PeCalculated(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        print(f"Loading data for PE metric for ticker {stock_details.ticker}")
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
 
         if not yahoo_data.get('netIncomeToCommon'):
             print(f"netIncomeToCommon data not available for {stock_details.ticker}")
@@ -36,14 +36,15 @@ class PeCalculated(FinancialMetric):
             yahoo_data_last_update_dt = datetime.strptime(yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
             self.data_quality = 1.0/((now - yahoo_data_last_update_dt).days // 1 + 1)
-            print(f"Successfully calculated data quality for pe_calculated: {self.data_quality}")
+            print(f"Successfully calculated data quality for {self.name}: {self.data_quality}")
         except ValueError:
-            print(f"Invalid last update format for PE metric: {yahoo_data.get('lastUpdate', 'N/A')}")
+            print(f"Invalid last update format for {self.name} metric: {yahoo_data.get('lastUpdate', 'N/A')}")
             self.data_quality = 0.1
-            self.comment += " - invalid last update format"
+            self.comment += "\n - invalid last update format"
             return
 
-        self.comment += " - last update on " + yahoo_data['lastUpdate']
+        self.comment += "\n - last update on " + yahoo_data['lastUpdate']
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"
         self.value = round(yahoo_data['netIncomeToCommon'] / yahoo_data['sharesOutstanding'] / yahoo_data['currentPrice'] * 100)
         self.last_update = yahoo_data['lastUpdate']
-        print(f"PeCalculated metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")

@@ -61,6 +61,7 @@ resource "google_cloudfunctions_function" "ticket_details_function" {
     CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
     YAHOO_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/yahoo"
     HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
+    GET_METRIC_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/get_metric"
   }
   depends_on = [
     google_storage_bucket_object.ticket_details_source,

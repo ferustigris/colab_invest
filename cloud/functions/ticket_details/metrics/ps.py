@@ -18,7 +18,7 @@ class Ps(FinancialMetric):
             self.value = yahoo_data['priceToSalesTrailing12Months']
             self.data_quality = 0.6  # Good quality calculated ratio
             self.last_update = int(time.time())
-            print(f"Ps metric loaded successfully: value={self.value}, quality={self.data_quality}")
+            print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
         else:
             print(f"priceToSalesTrailing12Months data not available for {stock_details.ticker}")
             self.data_quality = 0.0

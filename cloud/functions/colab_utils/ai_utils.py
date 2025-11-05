@@ -50,7 +50,6 @@ def filter_chat_history_by_time_and_limit(
 
 def prepare_openai_context(
     history: List[Dict[str, Any]], 
-    prompt_relay: Dict[str, str],
     max_interactions: int = 10,
     max_time_interval_hours: int = 24
 ) -> List[Dict[str, str]]:
@@ -69,10 +68,6 @@ def prepare_openai_context(
     context = filter_chat_history_by_time_and_limit(
         history, max_interactions, max_time_interval_hours
     )
-    
-    # If the last message is from user, append the prompt relay content
-    if context and context[-1]["role"] == USER_ROLE_NAME:
-        context[-1]["content"] += " " + prompt_relay["content"]
     
     return context
 

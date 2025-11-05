@@ -12,17 +12,11 @@ class PriceForecastDiv(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for price forecast dividend metric for ticker {stock_details.ticker}")
-        # Simple DDM calculation: Dividend / (Required Return - Growth Rate)
-        # Using dividend rate and assuming 8% required return, 3% growth
-        if 'dividendRate' in yahoo_data and yahoo_data['dividendRate'] > 0:
-            required_return = 0.08
-            growth_rate = 0.03
-            self.value = yahoo_data['dividendRate'] / (required_return - growth_rate)
-            self.data_quality = 0.5  # Low quality - simplified model
-            self.last_update = int(time.time())
-            print(f"PriceForecastDiv metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"dividendRate data not available or zero for {stock_details.ticker}")
-            self.data_quality = 0.0
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
+        # Use current price and dividend for forecast
+        # =2/3*E2*V2/(1-1/(1+Trands!$D$3))
+        price = stock_details.current_price.value
+        div = stock_details.dividend.value
+        self.value = 2/3 * price * div / (1 - 1/(1 + 0.026))
+        self.data_quality = stock_details.current_price.data_quality * stock_details.dividend.data_quality
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"

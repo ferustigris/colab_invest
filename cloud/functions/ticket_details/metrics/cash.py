@@ -13,12 +13,12 @@ class Cash(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        print(f"Loading data for cash metric for ticker {stock_details.ticker}")
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
         
         if not 'totalCash' in yahoo_data:
             print(f"totalCash data not available for {stock_details.ticker}")
             self.data_quality = 0.0
-            self.comment += " - totalCash data not available"
+            self.comment += "\n - totalCash data not available"
             return
 
         now = datetime.now()
@@ -27,14 +27,15 @@ class Cash(FinancialMetric):
             yahoo_data_last_update_dt = datetime.strptime(yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
             self.data_quality = 1.0/((now - yahoo_data_last_update_dt).days // 7 + 1)
-            print(f"Successfully calculated data quality for cash: {self.data_quality}")
+            print(f"Successfully calculated data quality for {self.name}: {self.data_quality}")
         except ValueError:
-            print(f"Invalid last update format for cash metric: {yahoo_data.get('lastUpdate', 'N/A')}")
+            print(f"Invalid last update format for {self.name} metric: {yahoo_data.get('lastUpdate', 'N/A')}")
             self.data_quality = 0.1
-            self.comment += " - invalid last update format"
+            self.comment += "\n - invalid last update format"
             return
 
-        self.comment += " - last update on " + yahoo_data['lastUpdate']
+        self.comment += "\n - last update on " + yahoo_data['lastUpdate']
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"
         self.value = yahoo_data['totalCash']
         self.last_update = yahoo_data['lastUpdate']
-        print(f"Cash metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")

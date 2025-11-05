@@ -30,8 +30,8 @@ class MetricsCompositor(FinancialMetric):
         self.value = reduce(lambda x, y: x + y, [metric.value for metric in valid_metrics], 0) / len(valid_metrics)
         print(f"Average value: {self.value}")
 
-        max_value = reduce(lambda x, y: max(x.value, y.value), valid_metrics)
-        min_value = reduce(lambda x, y: min(x.value, y.value), valid_metrics)
+        max_value = reduce(lambda x, y: max(x, y.value), valid_metrics, -1e9)
+        min_value = reduce(lambda x, y: min(x, y.value), valid_metrics, 1e9)
 
         print(f"Max value among methods: {max_value}, Min value among methods: {min_value}")
 
@@ -43,9 +43,14 @@ class MetricsCompositor(FinancialMetric):
         else:
             print("Max value is 0 - no variance adjustment applied")
 
-        self.comment += " - last update on " + yahoo_data['lastUpdate']
-        self.comment += f" - max {self.name} among methods: {max_value}, min {self.name} among methods: {min_value}"
-        self.comment += f" - amount of valid methods used: {len(valid_metrics)}"
+        self.comment += "\n - last update on " + yahoo_data['lastUpdate']
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"
+        self.comment += f"\n - max {self.name} among methods: {max_value}, min {self.name} among methods: {min_value}"
+        self.comment += f"\n - amount of valid methods used: {len(valid_metrics)}"
+        
+        # Add details for each child metric
+        for metric in self.methods:
+            self.comment += f"\n - {metric.name}: value={metric.value}, quality={metric.data_quality:.2f}"
         self.last_update = yahoo_data['lastUpdate']
         print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
 

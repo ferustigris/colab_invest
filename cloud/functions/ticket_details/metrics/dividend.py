@@ -1,24 +1,23 @@
-from financial_metric import FinancialMetric
+from datetime import datetime, timedelta
+from functools import reduce
+from metrics.metrics_compositor import MetricsCompositor
+from metrics.dividend_yield import DividendYield
+from metrics.dividend_yield_annual import TrailingAnnualDividendYield
+from metrics.dividend_yield_5years_avg import FiveYearAvgDividendYield
+from metrics.dividend_yield_forward import ForwardAnnualDividendYield
 
-
-class Dividend(FinancialMetric):
+class Dividend(MetricsCompositor):
     def __init__(self):
         super().__init__(
             "dividend",
             0,
-            "Annual dividend per share",
+            "Dividend-related metrics",
             0,
-            "1970-01-01T00:00:00Z"
+            "1970-01-01T00:00:00Z",
+            [
+                DividendYield(),
+                TrailingAnnualDividendYield(),
+                FiveYearAvgDividendYield(),
+                ForwardAnnualDividendYield()
+            ]
         )
-    
-    def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for dividend metric for ticker {stock_details.ticker}")
-        if 'dividendRate' in yahoo_data:
-            self.value = yahoo_data['dividendRate']
-            self.data_quality = 0.6  # Good quality dividend data
-            self.last_update = int(time.time())
-            print(f"Dividend metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"dividendRate data not available for {stock_details.ticker}")
-            self.data_quality = 0.0

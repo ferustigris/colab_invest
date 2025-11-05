@@ -12,14 +12,11 @@ class PriceForecastEquity(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for price forecast equity metric for ticker {stock_details.ticker}")
-        # Use book value and P/B ratio for equity-based valuation
-        if 'bookValue' in yahoo_data and 'priceToBook' in yahoo_data:
-            self.value = yahoo_data['bookValue'] * yahoo_data['priceToBook']
-            self.data_quality = 0.6  # Moderate quality book value based
-            self.last_update = int(time.time())
-            print(f"PriceForecastEquity metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"bookValue or priceToBook data not available for {stock_details.ticker}")
-            self.data_quality = 0.0
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
+        nta = stock_details.nta.value
+        shares_outstanding = stock_details.shares.value
+
+        self.value = nta / shares_outstanding
+
+        self.data_quality = stock_details.nta.data_quality * stock_details.shares.data_quality
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"

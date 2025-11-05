@@ -30,16 +30,16 @@ resource "google_cloudfunctions_function_iam_member" "ask_sales_chat_function_in
 }
 
 
-resource "google_secret_manager_secret_iam_member" "allow_nvr_support_chat_function_access" {
+resource "google_secret_manager_secret_iam_member" "allow_get_metric_function_access" {
   secret_id = "chatgpt-api-key" # Created manually
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_cloudfunctions_function.ask_nvr_support_chat_function.service_account_email}"
+  member    = "serviceAccount:${google_cloudfunctions_function.get_metric_function.service_account_email}"
 }
 
-resource "google_cloudfunctions_function_iam_member" "ask_nvr_support_chat_function_invoker_permission" {
-  project        = google_cloudfunctions_function.ask_nvr_support_chat_function.project
-  region         = google_cloudfunctions_function.ask_nvr_support_chat_function.region
-  cloud_function = google_cloudfunctions_function.ask_nvr_support_chat_function.name
+resource "google_cloudfunctions_function_iam_member" "get_metric_function_invoker_permission" {
+  project        = google_cloudfunctions_function.get_metric_function.project
+  region         = google_cloudfunctions_function.get_metric_function.region
+  cloud_function = google_cloudfunctions_function.get_metric_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"

@@ -2,23 +2,28 @@ from financial_metric import FinancialMetric
 from datetime import datetime, timedelta
 
 
-class Revenue(FinancialMetric):
+class SharesImpliedCalculated(FinancialMetric):
     def __init__(self):
         super().__init__(
-            "revenue",
+            "sharesImplied",
             0,
-            "Total revenue for the last twelve months",
+            "Total number of shares implied by the current stock price and market capitalization",
             0,
             "1970-01-01T00:00:00Z"
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
-        
-        if not 'totalRevenue' in yahoo_data:
-            print(f"totalRevenue data not available for {stock_details.ticker}")
+
+        if not 'currentPrice' in yahoo_data:
+            print(f"currentPrice data not available for {stock_details.ticker}")
             self.data_quality = 0.0
-            self.comment += "\n - totalRevenue data not available"
+            self.comment += "\n - currentPrice data not available"
+            return
+        if not 'marketCap' in yahoo_data:
+            print(f"marketCap data not available for {stock_details.ticker}")
+            self.data_quality = 0.0
+            self.comment += "\n - marketCap data not available"
             return
 
         now = datetime.now()
@@ -36,6 +41,6 @@ class Revenue(FinancialMetric):
 
         self.comment += "\n - last update on " + yahoo_data['lastUpdate']
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
-        self.value = yahoo_data['totalRevenue']
+        self.value = yahoo_data['marketCap'] / yahoo_data['currentPrice']
         self.last_update = yahoo_data['lastUpdate']
-        print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        print(f"CalculatedimpliedSharesOutstanding metric loaded successfully: value={self.value}, quality={self.data_quality}")
