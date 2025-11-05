@@ -6,7 +6,9 @@ import 'package:portal_ux/data/app_constants.dart';
 
 class TicketService {
   /// Stream-based метод для progressive loading тикетов
-  static Stream<List<Ticket>> getTicketsStream() async* {
+  static Stream<List<Ticket>> getTicketsStream({
+    String category = 'stocks',
+  }) async* {
     List<Ticket> currentTickets = [];
 
     try {
@@ -20,7 +22,7 @@ class TicketService {
 
       // Шаг 1: Получаем список тикеров
       final tickersResponse = await http.get(
-        Uri.parse(AppConstants.cloudUrlTickets),
+        Uri.parse('${AppConstants.cloudUrlTickets}/$category'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',

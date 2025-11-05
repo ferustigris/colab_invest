@@ -8,7 +8,7 @@ import 'package:portal_ux/firebase_options.dart';
 import 'package:portal_ux/data/state_notifiers.dart';
 import 'package:portal_ux/data/preference_names.dart';
 import 'package:portal_ux/data/app_constants.dart';
-import 'package:portal_ux/views/tickets_view.dart';
+import 'package:portal_ux/views/main_page.dart';
 import 'package:portal_ux/views/device_registration_view.dart';
 
 void main() async {
@@ -98,6 +98,6 @@ class _HomePageState extends State<HomePage> {
     return (StateNotifiers.userDeviceTokenData.value.isRegistrationPending ||
             StateNotifiers.userDeviceTokenData.value.isRegAckPending)
         ? DeviceRegistrationView()
-        : TicketsView();
+        : MainPage();
   }
 }

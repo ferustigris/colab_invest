@@ -8,34 +8,53 @@ import 'package:portal_ux/utils/is_mobile_view_port.dart';
 import 'package:portal_ux/l10n/app_localizations.dart';
 
 class TicketsView extends StatelessWidget {
-  const TicketsView({super.key});
+  final String category;
+  const TicketsView({super.key, this.category = 'stocks'});
 
   @override
   Widget build(BuildContext context) {
     return AuthGate(
       page:
           isMobileViewPort(context)
-              ? TicketsScreen()
-              : Stack(children: [TicketsScreen(), AIPopUpChat()]),
+              ? TicketsScreen(category: category)
+              : Stack(
+                children: [TicketsScreen(category: category), AIPopUpChat()],
+              ),
     );
   }
 }
 
 class TicketsScreen extends StatefulWidget {
-  const TicketsScreen({super.key});
+  final String category;
+  const TicketsScreen({super.key, this.category = 'stocks'});
 
   @override
   State<TicketsScreen> createState() => _TicketsScreenState();
 }
 
 class _TicketsScreenState extends State<TicketsScreen> {
+  String get _pageTitle {
+    switch (widget.category) {
+      case 'stocks':
+        return AppLocalizations.of(context)!.ticketsPageTitle;
+      case 'etfs':
+        return 'ETFs';
+      case 'bonds':
+        return 'Bonds';
+      case 'crypto':
+        return 'Crypto';
+      case 'commodities':
+        return 'Commodities';
+      default:
+        return AppLocalizations.of(context)!.ticketsPageTitle;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: AppLocalizations.of(context)!.ticketsPageTitle,
-      ),
-      body: const TicketsTable(),
+      appBar: CommonAppBar(title: _pageTitle),
+      body: TicketsTable(category: widget.category),
       bottomNavigationBar:
           isMobileViewPort(context) ? CommonNavigationBar() : null,
     );

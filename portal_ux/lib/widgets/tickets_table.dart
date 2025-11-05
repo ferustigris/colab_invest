@@ -3,7 +3,8 @@ import 'package:portal_ux/data/models/ticket.dart';
 import 'package:portal_ux/data/services/ticket_service.dart';
 
 class TicketsTable extends StatefulWidget {
-  const TicketsTable({super.key});
+  final String category;
+  const TicketsTable({super.key, this.category = 'stocks'});
 
   @override
   State<TicketsTable> createState() => _TicketsTableState();
@@ -32,7 +33,7 @@ class _TicketsTableState extends State<TicketsTable> {
       loadedCount = 0;
     });
 
-    TicketService.getTicketsStream().listen(
+    TicketService.getTicketsStream(category: widget.category).listen(
       (ticketsList) {
         print('Stream update received: ${ticketsList.length} tickets');
         setState(() {
