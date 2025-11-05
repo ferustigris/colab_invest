@@ -1,3 +1,4 @@
+import os
 from firebase_utils import firebase_user_required
 from general_utils import cors_headers, exception_logger
 from flask_cors import cross_origin
@@ -21,13 +22,10 @@ def tickets(request, user):
     last_element = Path(path).name
     print("this is the last element:", last_element)
 
-    # List of stock tickers as strings
-    stock_tickers = [
-        "VOW", "KHC", "HPK", "INTC", "JD", "DOW", "BAS", "PFE", "BIDU", "EHLD", 
-        "TGT", "KSA", "SAN1", "SHELL", "RIO", "PYPL", "SOLV", "OXY", "SWR", "BAYN", 
-        "TTE", "OKE", "ULTA", "BBWI", "SIRI", "BMW", "NVS", "AAPL", "IBE", "VZ", 
-        "ORA", "HAFN", "REP", "USB", "DAL", "GOOGL", "AXP", "MSFT", "ALV", "BABA", 
-        "BAC", "IAG", "ESEA", "METC", "HOT", "META", "TSM"
-    ]
-    
-    return stock_tickers
+    historizer_url = os.environ.get("HISTORIZER_URL")
+
+    blob_name = f"collection_{last_element}.json" if last_element else "collection_default.json"
+    response = requests.get(f"{historizer_url}/{blob_name}", headers=request.headers)
+    response.raise_for_status()
+
+    return response.json()

@@ -16,8 +16,7 @@ resource "google_cloudfunctions_function" "tickets_function" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
-    TELEGRAM_CHAT_ID = "5081253547"
-    CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
   }
   depends_on = [
     google_storage_bucket_object.tickets_source,

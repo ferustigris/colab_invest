@@ -45,7 +45,6 @@ def yahoo(request, user):
     print("yahoo function called")
     historizer_url = os.environ.get("HISTORIZER_URL")
 
-    print("yahoo function called")    
     now = datetime.now()
     now_timestamp = datetime.strftime(now, "%Y-%m-%dT%H:%M:%SZ")
 
