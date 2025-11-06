@@ -25,6 +25,8 @@ def is_valid_cache(yahoo_data_last_update, yahoo_data, cache_hours=24):
     """
     if not yahoo_data_last_update or not yahoo_data:
         return False
+    if not yahoo_data["currentPrice"] or not yahoo_data["marketCap"]:
+        return False
     
     try:
         yahoo_data_last_update_dt = datetime.strptime(yahoo_data_last_update, "%Y-%m-%dT%H:%M:%SZ")
@@ -57,8 +59,10 @@ def yahoo(request, user):
     response = requests.get(f"{historizer_url}/{blob_name}", headers=request.headers)
     response.raise_for_status()
     yahoo_data = response.json().get("yahoo_data", {})   
-    yahoo_data_last_update = response.json().get("lastUpdate", {})   
-    
+    yahoo_data_last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
+    result = json.loads(yahoo_data)
+    result['lastUpdate'] = yahoo_data_last_update
+
     if not is_valid_cache(yahoo_data_last_update, yahoo_data):
         print(f"Cache invalid or expired, fetching fresh data for ticker {ticker}")
         
@@ -71,8 +75,6 @@ def yahoo(request, user):
         response.raise_for_status()
 
         result['lastUpdate'] = now_timestamp
-        return result
 
     print(f"Using cached data for ticker {ticker}")
-    yahoo_data['lastUpdate'] = yahoo_data_last_update
-    return yahoo_data
+    return result

@@ -11,14 +11,14 @@ CONTEXT_LENGTH_MAX_INTERACTIONS = 10  # interaction is a user message with chatb
 CONTEXT_MAX_TIME_INTERVAL_HOURS = 24
 ASSISTANT_ROLE_NAME = "assistant"
 USER_ROLE_NAME = "user"
-GPT_MODEL = "gpt‑5‑nano"
+GPT_MODEL = "gpt-5-nano"
 SYSTEM_PROMPT = """
   You should classify user request into 4 categories: 
-  - Sales assistant (e.g., product inquiries, pricing), 
-  - NVR support (e.g., how-to questions), 
+  - Financial assistant (e.g., questions about companies, sentiments or economic data),
+  - Portal support and questions (e.g., how-to questions), 
   - Human support (when a human agent is required),
   - other (what you cannot classify).
-  Your response is only one word: "Sales assistant", "NVR support", "Human support", or "other".
+  Your response is only one word: "Financial assistant", "Portal support", "Human support", or "other".
   """
 
 
@@ -48,8 +48,8 @@ def ask_chat(request, user):
     
     openai_api = "https://api.openai.com/v1/chat/completions"
     historizer_url = os.environ.get("HISTORIZER_URL")
-    SALES_BOT_URL = os.environ.get("SALES_BOT_URL")
-    NVR_SUPPORT_URL = os.environ.get("NVR_SUPPORT_URL")
+    FINANCE_ASSISTANT_BOT_URL = os.environ.get("FINANCE_ASSISTANT_BOT_URL")
+    PORTAL_SUPPORT_URL = os.environ.get("PORTAL_SUPPORT_URL")
     HUMAN_SUPPORT_URL = os.environ.get("HUMAN_SUPPORT_URL")
     TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
@@ -59,8 +59,7 @@ def ask_chat(request, user):
     }
     body = request.get_json()
     messages = body['messages']
-    message = messages[-2:][0]
-    promptRelay = messages[-1:][0]  # IMPORTANT! See the call in frontend code
+    message = messages[-1:][0]
 
     now = datetime.now()
     now_timestamp = datetime.strftime(now, "%Y-%m-%d %H:%M:%S.%f")
@@ -76,12 +75,11 @@ def ask_chat(request, user):
     history = response.json().get("chat_history", [])   
     history.append(message)
 
-    print(f"Retrieved history with {len(history)} items with promptRelay: {promptRelay}")
+    print(f"Retrieved history with {len(history)} items")
     
     # Use ai_utils to prepare context
     context = prepare_openai_context(
         history=history,
-        prompt_relay=promptRelay,
         max_interactions=CONTEXT_LENGTH_MAX_INTERACTIONS,
         max_time_interval_hours=CONTEXT_MAX_TIME_INTERVAL_HOURS
     )
@@ -101,19 +99,19 @@ def ask_chat(request, user):
     bot_response = "I'm sorry, but I cannot assist with that request. Do you want me to connect you to a human?"  # default
 
     match request_class:
-        case "Sales assistant":
-            print("Classified as sales")
-            response = requests.post(SALES_BOT_URL, headers=request.headers, json={"chat_history": history, "prompt_relay": promptRelay})
+        case "Financial assistant":
+            print("Classified as financial assistant")
+            response = requests.post(FINANCE_ASSISTANT_BOT_URL, headers=request.headers, json={"chat_history": history, "prompt_relay": promptRelay})
             response.raise_for_status()
             bot_response = response.text
-        case "NVR support":
-            print("Classified as NVR support")
-            response = requests.post(NVR_SUPPORT_URL, headers=request.headers, json={"chat_history": history, "prompt_relay": promptRelay})
+        case "Portal support":
+            print("Classified as Portal support")
+            response = requests.post(PORTAL_SUPPORT_URL, headers=request.headers, json={"chat_history": history, "prompt_relay": promptRelay})
             response.raise_for_status()
             bot_response = response.text
         case "Human support":
             print("Classified as Human support")
-            data = {"chat_history": history, "prompt_relay": promptRelay, "chat_id": TELEGRAM_CHAT_ID, "message": message["content"]}
+            data = {"chat_history": history, "chat_id": TELEGRAM_CHAT_ID, "message": message["content"]}
             response = requests.post(HUMAN_SUPPORT_URL, headers=request.headers, json=data)
             response.raise_for_status()
             bot_response = response.text

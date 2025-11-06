@@ -196,14 +196,14 @@ class _TicketsTableState extends State<TicketsTable> {
 
   Color _getProfitGrowthColor(double? growth) {
     if (growth == null) return Colors.grey;
-    if (growth > 20) return Colors.green;
-    if (growth > 10) return Colors.lightGreen;
+    if (growth > 15) return Colors.green;
+    if (growth > 8) return Colors.lightGreen;
     if (growth > 0) return Colors.orange;
     return Colors.red;
   }
 
   Color _getProfitGrowthBorderColor(Ticket ticket) {
-    final growth = ticket.profitGrowth10Years;
+    final growth = ticket.profitGrowth10Years! * 100;
     // Otherwise use standard logic
     return _getProfitGrowthColor(growth);
   }
@@ -625,7 +625,7 @@ class _TicketsTableState extends State<TicketsTable> {
                               ),
                               decoration: BoxDecoration(
                                 color: _getProfitGrowthColor(
-                                  ticket.profitGrowth10Years,
+                                  ticket.profitGrowth10Years! * 100,
                                 ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
@@ -635,13 +635,13 @@ class _TicketsTableState extends State<TicketsTable> {
                               ),
                               child: Text(
                                 _formatNumber(
-                                  ticket.profitGrowth10Years,
+                                  ticket.profitGrowth10Years! * 100,
                                   decimals: 0,
                                   suffix: '%',
                                 ),
                                 style: TextStyle(
                                   color: _getProfitGrowthColor(
-                                    ticket.profitGrowth10Years,
+                                    ticket.profitGrowth10Years! * 100,
                                   ),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 10,
@@ -914,7 +914,7 @@ class _TicketsTableState extends State<TicketsTable> {
                             child: Text(
                               _formatNumber(
                                 ticket.buybackPercent,
-                                decimals: 1,
+                                decimals: 2,
                                 suffix: '%',
                               ),
                               style: TextStyle(fontSize: 12),
@@ -1050,7 +1050,7 @@ class _TicketsTableState extends State<TicketsTable> {
                     'Buyback',
                     _formatNumber(
                       ticket.buybackPercent,
-                      decimals: 1,
+                      decimals: 2,
                       suffix: '%',
                     ),
                   ),
@@ -1097,7 +1097,11 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   _buildDetailRow(
                     'Profit Growth 10Y',
-                    _formatNumber(ticket.profitGrowth10Years, suffix: '%'),
+                    _formatNumber(
+                      ticket.profitGrowth10Years! * 100,
+                      suffix: '%',
+                      decimals: 2,
+                    ),
                   ),
                   _buildDetailRow(
                     'Free Cash Flow',

@@ -14,16 +14,16 @@ resource "google_cloudfunctions_function_iam_member" "ask_chat_function_invoker_
 }
 
 
-resource "google_secret_manager_secret_iam_member" "allow_ask_sales_chat_function_access" {
+resource "google_secret_manager_secret_iam_member" "allow_ask_finance_assistent_chat_function_access" {
   secret_id = "chatgpt-api-key" # Created manually
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_cloudfunctions_function.ask_sales_chat_function.service_account_email}"
+  member    = "serviceAccount:${google_cloudfunctions_function.ask_finance_assistent_chat_function.service_account_email}"
 }
 
-resource "google_cloudfunctions_function_iam_member" "ask_sales_chat_function_invoker_permission" {
-  project        = google_cloudfunctions_function.ask_sales_chat_function.project
-  region         = google_cloudfunctions_function.ask_sales_chat_function.region
-  cloud_function = google_cloudfunctions_function.ask_sales_chat_function.name
+resource "google_cloudfunctions_function_iam_member" "ask_finance_assistent_chat_function_invoker_permission" {
+  project        = google_cloudfunctions_function.ask_finance_assistent_chat_function.project
+  region         = google_cloudfunctions_function.ask_finance_assistent_chat_function.region
+  cloud_function = google_cloudfunctions_function.ask_finance_assistent_chat_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"

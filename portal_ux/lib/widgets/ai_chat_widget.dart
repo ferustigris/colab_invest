@@ -35,60 +35,70 @@ class _AIChatWidgetState extends State<AIChatWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final String userMarker = AppLocalizations.of(context)!.aiAssistantChatUserMarker;
+    final String userMarker =
+        AppLocalizations.of(context)!.aiAssistantChatUserMarker;
 
     return Column(
-            children: [
-              Text(
-                AppLocalizations.of(context)!.aiAssistantPageTitle,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  children:
-                      _messages
-                          .map(
-                            (msg) => Text(
-                              "${msg['author']}: ${msg['content']}",
-                              style: msg['author']!.startsWith(userMarker) ? AppStyles.aiUserTextStyle : AppStyles.aiAssistantTextStyle,
-                            ),
-                          )
-                          .toList()
-                          + [isMobileViewPort(context) ? Text("") : (Text("\n\n\n"))] // crutch mitigating autoscroll flaw in corner-popup chat display
-                ),
-              ),
-              if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: CircularProgressIndicator(),
-                ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      autofocus: true,
-                      focusNode: inputFocusNode,
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.aiAssistantChatInputPlaceholder,
+      children: [
+        Text(
+          AppLocalizations.of(context)!.aiAssistantPageTitle,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const Divider(),
+        Expanded(
+          child: ListView(
+            controller: scrollController,
+            children:
+                _messages
+                    .map(
+                      (msg) => Text(
+                        "${msg['author']}: ${msg['content']}",
+                        style:
+                            msg['author']!.startsWith(userMarker)
+                                ? AppStyles.aiUserTextStyle
+                                : AppStyles.aiAssistantTextStyle,
                       ),
-                      onSubmitted: _sendMessage,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () => _sendMessage(_controller.text),
-                  ),
-                ],
+                    )
+                    .toList() +
+                [
+                  isMobileViewPort(context) ? Text("") : (Text("\n\n\n")),
+                ], // crutch mitigating autoscroll flaw in corner-popup chat display
+          ),
+        ),
+        if (_isLoading)
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: CircularProgressIndicator(),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                autofocus: true,
+                focusNode: inputFocusNode,
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText:
+                      AppLocalizations.of(
+                        context,
+                      )!.aiAssistantChatInputPlaceholder,
+                ),
+                onSubmitted: _sendMessage,
               ),
-            ],
-          );
+            ),
+            IconButton(
+              icon: const Icon(Icons.send),
+              onPressed: () => _sendMessage(_controller.text),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Future<void> _sendMessage(String userInput) async {
-    final String userMarker = AppLocalizations.of(context)!.aiAssistantChatUserMarker;
+    final String userMarker =
+        AppLocalizations.of(context)!.aiAssistantChatUserMarker;
 
     if (userInput.trim().isEmpty) return;
 
@@ -100,12 +110,6 @@ class _AIChatWidgetState extends State<AIChatWidget> {
     });
 
     try {
-      List<Map<String, String>> promptRelay = List<Map<String, String>>.from(_messages);
-      promptRelay.add({  // IMPORTANT! Do not delete, affects backend gpt call
-        "author": userMarker,
-        "content": AppLocalizations.of(context)!.aiLanguagePrompt,
-        });
-
       final idToken = await StateNotifiers.user.value!.getIdToken();
       final response = await http.post(
         Uri.parse(AppConstants.aiModelEndpointUrl),
@@ -116,7 +120,7 @@ class _AIChatWidgetState extends State<AIChatWidget> {
         },
         body: jsonEncode({
           "messages": [
-            ...promptRelay.map(
+            ..._messages.map(
               (msg) => {
                 "role": msg["author"] == userMarker ? "user" : "assistant",
                 "content": msg["content"],
@@ -158,5 +162,4 @@ class _AIChatWidgetState extends State<AIChatWidget> {
     scrollController.jumpTo(scrollController.position.maxScrollExtent);
     inputFocusNode.requestFocus();
   }
-
 }

@@ -18,10 +18,10 @@ resource "google_cloudfunctions_function" "ask_chat_function" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
-    HISTORIZER_URL = "https://europe-west1-video-processing-458313.cloudfunctions.net/chat-history"
-    SALES_BOT_URL = "https://europe-west1-video-processing-458313.cloudfunctions.net/ask-sales-chat"
-    NVR_SUPPORT_URL = "https://europe-west1-video-processing-458313.cloudfunctions.net/ask-nvr-support-chat"
-    HUMAN_SUPPORT_URL = "https://europe-west1-video-processing-458313.cloudfunctions.net/send_to_telegram_bot"
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/chat-history"
+    FINANCE_ASSISTANT_BOT_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/ask_finance_assistent_chat"
+    PORTAL_SUPPORT_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/ask-support-chat"
+    HUMAN_SUPPORT_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/send_to_telegram_bot"
     TELEGRAM_CHAT_ID = "5081253547"
   }
   depends_on = [
@@ -30,16 +30,16 @@ resource "google_cloudfunctions_function" "ask_chat_function" {
   ]
 }
 
-resource "google_cloudfunctions_function" "ask_sales_chat_function" {
-  name        = "ask-sales-chat"
-  description = "Ask sales assistant for help"
+resource "google_cloudfunctions_function" "ask_finance_assistent_chat_function" {
+  name        = "ask_finance_assistent_chat"
+  description = "Ask finance assistant for help"
   region      = "europe-west1"
-  entry_point = "ask_sales_chat"
+  entry_point = "ask_finance_assistent_chat"
 
   runtime = "python311"
 
   source_archive_bucket = google_storage_bucket.src_bucket.name
-  source_archive_object = google_storage_bucket_object.ask_sales_chat_source.name
+  source_archive_object = google_storage_bucket_object.ask_finance_assistent_chat_source.name
 
   trigger_http = true
   service_account_email = google_service_account.default_compute.email
@@ -50,22 +50,22 @@ resource "google_cloudfunctions_function" "ask_sales_chat_function" {
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
   }
   depends_on = [
-    google_storage_bucket_object.ask_sales_chat_source,
+    google_storage_bucket_object.ask_finance_assistent_chat_source,
     google_service_account.default_compute
   ]
 }
 
-data "archive_file" "ask_sales_chat_function_dist" {
+data "archive_file" "ask_finance_assistent_chat_function_dist" {
   type        = "zip"
-  source_dir  = "./functions/ask_sales_chat"
-  output_path = "function/ask_sales_chat_dist${local.always_trigger}.zip"
+  source_dir  = "./functions/ask_finance_assistent_chat"
+  output_path = "function/ask_finance_assistent_chat_dist${local.always_trigger}.zip"
   depends_on = [local.always_trigger]
 }
 
-resource "google_storage_bucket_object" "ask_sales_chat_source" {
-  name   = "ask_sales_chat-source.${data.archive_file.ask_sales_chat_function_dist.output_md5}.zip"
+resource "google_storage_bucket_object" "ask_finance_assistent_chat_source" {
+  name   = "ask_finance_assistent_chat-source.${data.archive_file.ask_finance_assistent_chat_function_dist.output_md5}.zip"
   bucket = google_storage_bucket.src_bucket.name
-  source = data.archive_file.ask_sales_chat_function_dist.output_path
+  source = data.archive_file.ask_finance_assistent_chat_function_dist.output_path
 }
 
 resource "google_cloudfunctions_function" "get_metric_function" {
@@ -217,7 +217,7 @@ resource "google_cloudfunctions_function" "telegram_bot_handler" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
-    HISTORIZER_URL = "https://europe-west1-video-processing-458313.cloudfunctions.net/chat-history"
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/chat-history"
   }
   depends_on = [
     google_storage_bucket_object.telegram_bot_handler_source,

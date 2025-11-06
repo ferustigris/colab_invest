@@ -15,7 +15,7 @@ class PriceForecastPE(FinancialMetric):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
         # Use forward EPS and target P/E for forecast
         # =(8,5+2*(POWER(C2; 1/10)-1)*100)*E2/P2
-        growth = stock_details.profit_growth_10_years.value
+        growth = stock_details.profit_growth_10_years.value + 1
         price = stock_details.current_price.value
         pe = stock_details.pe.value
 
