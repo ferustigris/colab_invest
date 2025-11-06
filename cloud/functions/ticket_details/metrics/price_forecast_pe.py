@@ -19,6 +19,12 @@ class PriceForecastPE(FinancialMetric):
         price = stock_details.current_price.value
         pe = stock_details.pe.value
 
+        if growth <= 0 or pe <= 0:
+            self.value = 0
+            self.data_quality = 0.0
+            self.comment += f"\n - Invalid growth ({growth}) or P/E ({pe}) value"
+            return
+
         self.value = (8.5 + 2 * (pow(growth, 1/10) - 1) * 100) * price / pe
 
         self.data_quality = stock_details.current_price.data_quality * stock_details.profit_growth_10_years.data_quality * stock_details.pe.data_quality

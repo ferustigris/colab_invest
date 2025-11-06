@@ -24,11 +24,18 @@ class MetricsCompositor(FinancialMetric):
 
         valid_metrics = [metric for metric in self.methods if metric.data_quality > 0]
 
-        self.data_quality = reduce(lambda x, y: x * y, [metric.data_quality for metric in valid_metrics], 1.0)
+        self.data_quality = reduce(lambda x, y: x * y, [metric.data_quality for metric in valid_metrics], 1.0) * len(valid_metrics) / len(self.methods)
         print(f"Initial data quality (product): {self.data_quality}")
-        
-        self.value = reduce(lambda x, y: x + y, [metric.value for metric in valid_metrics], 0) / len(valid_metrics)
-        print(f"Average value: {self.value}")
+
+        try:
+            self.value = reduce(lambda x, y: x + y, [metric.value for metric in valid_metrics], 0) / len(valid_metrics)
+            print(f"Average value: {self.value}")
+        except ZeroDivisionError:
+            print(f"No valid metrics available to compute average for {self.name}")
+            self.value = 0
+            self.data_quality = 0.0
+            self.comment += "\n - no valid metrics available to compute average"
+            return
 
         max_value = reduce(lambda x, y: max(x, y.value), valid_metrics, -1e9)
         min_value = reduce(lambda x, y: min(x, y.value), valid_metrics, 1e9)

@@ -184,9 +184,14 @@ class _TicketsTableState extends State<TicketsTable> {
     }).toList();
   }
 
-  String _formatNumber(double? value, {int decimals = 2, String suffix = ''}) {
+  String _formatNumber(
+    double? value, {
+    int decimals = 2,
+    String postfix = '',
+    String suffix = '',
+  }) {
     if (value == null) return 'N/A';
-    return '${value.toStringAsFixed(decimals)}$suffix';
+    return '$suffix${value.toStringAsFixed(decimals)}$postfix';
   }
 
   Color _getProfitGrowthColor(double? growth) {
@@ -199,20 +204,11 @@ class _TicketsTableState extends State<TicketsTable> {
 
   Color _getProfitGrowthBorderColor(Ticket ticket) {
     final growth = ticket.profitGrowth10Years;
-    final quality = ticket.dataQuality['profitGrowth10Years'] ?? 1.0;
-
-    // Если качество низкое, возвращаем красный
-    if (quality < 0.7) {
-      return Colors.red;
-    }
-
     // Иначе используем стандартную логику
     return _getProfitGrowthColor(growth);
   }
 
-  Color _getPEColor(Ticket ticket) {
-    final pe = ticket.pe;
-
+  Color _getPEColor(double? pe) {
     // Красный если ниже нуля или качество ниже 0.7
     if (pe == null || pe < 0) {
       return Colors.red;
@@ -258,13 +254,6 @@ class _TicketsTableState extends State<TicketsTable> {
     String metricName,
     double? forecast,
   ) {
-    final quality = ticket.dataQuality[metricName] ?? 1.0;
-
-    // Если качество низкое, возвращаем красный
-    if (quality < 0.7) {
-      return Colors.red;
-    }
-
     // Иначе используем логику прогноза
     return _getForecastColor(forecast, ticket.currentPrice);
   }
@@ -641,7 +630,7 @@ class _TicketsTableState extends State<TicketsTable> {
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: _getProfitGrowthBorderColor(ticket),
-                                  width: 1,
+                                  width: 0,
                                 ),
                               ),
                               child: Text(
@@ -664,11 +653,11 @@ class _TicketsTableState extends State<TicketsTable> {
                           ),
                           _buildDataCellWithTooltip(
                             child: Text(
-                              "\$" +
-                                  _formatNumber(
-                                    ticket.currentPrice,
-                                    decimals: 2,
-                                  ),
+                              _formatNumber(
+                                ticket.currentPrice,
+                                decimals: 2,
+                                suffix: ticket.currency == "USD" ? '\$' : '',
+                              ),
                               style: TextStyle(fontSize: 12),
                             ),
                             ticket: ticket,
@@ -676,7 +665,11 @@ class _TicketsTableState extends State<TicketsTable> {
                           ),
                           _buildDataCellWithTooltip(
                             child: Text(
-                              _formatNumber(ticket.sma10Years, decimals: 0),
+                              _formatNumber(
+                                ticket.sma10Years,
+                                decimals: 0,
+                                suffix: ticket.currency == "USD" ? '\$' : '',
+                              ),
                               style: TextStyle(fontSize: 12),
                             ),
                             ticket: ticket,
@@ -687,6 +680,7 @@ class _TicketsTableState extends State<TicketsTable> {
                               _formatNumber(
                                 ticket.shares! / 1000_000_000,
                                 decimals: 2,
+                                postfix: 'B',
                               ),
                               style: TextStyle(
                                 fontSize: 12,
@@ -701,6 +695,8 @@ class _TicketsTableState extends State<TicketsTable> {
                               _formatNumber(
                                 ticket.revenue! / 1000_000_000,
                                 decimals: 2,
+                                postfix: 'B',
+                                suffix: ticket.currency == "USD" ? '\$' : '',
                               ),
                               style: TextStyle(
                                 fontSize: 12,
@@ -715,6 +711,8 @@ class _TicketsTableState extends State<TicketsTable> {
                               _formatNumber(
                                 ticket.netIncome! / 1000_000_000,
                                 decimals: 2,
+                                postfix: 'B',
+                                suffix: ticket.currency == "USD" ? '\$' : '',
                               ),
                               style: TextStyle(
                                 fontSize: 12,
@@ -729,6 +727,8 @@ class _TicketsTableState extends State<TicketsTable> {
                               _formatNumber(
                                 ticket.totalDebt! / 1000_000_000,
                                 decimals: 2,
+                                postfix: 'B',
+                                suffix: ticket.currency == "USD" ? '\$' : '',
                               ),
                               style: TextStyle(
                                 fontSize: 12,
@@ -743,6 +743,8 @@ class _TicketsTableState extends State<TicketsTable> {
                               _formatNumber(
                                 ticket.nta! / 1000_000_000,
                                 decimals: 2,
+                                postfix: 'B',
+                                suffix: ticket.currency == "USD" ? '\$' : '',
                               ),
                               style: TextStyle(
                                 fontSize: 12,
@@ -770,13 +772,14 @@ class _TicketsTableState extends State<TicketsTable> {
                                     'priceForecastDiv',
                                     ticket.priceForecastDiv,
                                   ),
-                                  width: 1,
+                                  width: 0,
                                 ),
                               ),
                               child: Text(
                                 _formatNumber(
                                   ticket.priceForecastDiv,
                                   decimals: 0,
+                                  suffix: ticket.currency == "USD" ? '\$' : '',
                                 ),
                                 style: TextStyle(
                                   fontSize: 11,
@@ -816,6 +819,7 @@ class _TicketsTableState extends State<TicketsTable> {
                                 _formatNumber(
                                   ticket.priceForecastPE,
                                   decimals: 0,
+                                  suffix: ticket.currency == "USD" ? '\$' : '',
                                 ),
                                 style: TextStyle(
                                   fontSize: 11,
@@ -855,6 +859,7 @@ class _TicketsTableState extends State<TicketsTable> {
                                 _formatNumber(
                                   ticket.priceForecastEquity,
                                   decimals: 0,
+                                  suffix: ticket.currency == "USD" ? '\$' : '',
                                 ),
                                 style: TextStyle(
                                   fontSize: 11,
@@ -874,7 +879,7 @@ class _TicketsTableState extends State<TicketsTable> {
                               _formatNumber(ticket.pe, decimals: 0),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: _getPEColor(ticket),
+                                color: _getPEColor(ticket.pe),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -884,7 +889,11 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(ticket.fpe, decimals: 0),
-                              style: TextStyle(fontSize: 12),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _getPEColor(ticket.fpe),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             ticket: ticket,
                             metricName: 'fpe',
@@ -990,24 +999,40 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   _buildDetailRow(
                     'Market Cap',
-                    _formatNumber(ticket.marketCap, suffix: 'B'),
+                    _formatNumber(
+                      ticket.marketCap,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Revenue',
-                    _formatNumber(ticket.revenue, suffix: 'B'),
+                    _formatNumber(
+                      ticket.revenue,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Net Income',
-                    _formatNumber(ticket.netIncome, suffix: 'B'),
+                    _formatNumber(
+                      ticket.netIncome,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'EBITDA',
-                    _formatNumber(ticket.ebitda, suffix: 'B'),
+                    _formatNumber(
+                      ticket.ebitda,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRowWithColor(
                     'P/E Ratio',
                     _formatNumber(ticket.pe, decimals: 1),
-                    _getPEColor(ticket),
+                    _getPEColor(ticket.pe),
                   ),
                   _buildDetailRow(
                     'FPE',
@@ -1043,7 +1068,7 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   _buildDetailRow(
                     'Shares Outstanding',
-                    _formatNumber(ticket.shares, suffix: 'B'),
+                    _formatNumber(ticket.shares, postfix: 'B'),
                   ),
                   _buildDetailRow(
                     'SMA 10 Years',
@@ -1051,15 +1076,24 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   _buildDetailRow(
                     'Price Forecast (DIV)',
-                    _formatNumber(ticket.priceForecastDiv, suffix: '\$'),
+                    _formatNumber(
+                      ticket.priceForecastDiv,
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Price Forecast (PE)',
-                    _formatNumber(ticket.priceForecastPE, suffix: '\$'),
+                    _formatNumber(
+                      ticket.priceForecastPE,
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Price Forecast (Equity)',
-                    _formatNumber(ticket.priceForecastEquity, suffix: '\$'),
+                    _formatNumber(
+                      ticket.priceForecastEquity,
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Profit Growth 10Y',
@@ -1067,15 +1101,27 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   _buildDetailRow(
                     'Free Cash Flow',
-                    _formatNumber(ticket.freeCashFlow, suffix: 'B'),
+                    _formatNumber(
+                      ticket.freeCashFlow,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Total Debt',
-                    _formatNumber(ticket.totalDebt, suffix: 'B'),
+                    _formatNumber(
+                      ticket.totalDebt,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                   _buildDetailRow(
                     'Cash',
-                    _formatNumber(ticket.cash, suffix: 'B'),
+                    _formatNumber(
+                      ticket.cash,
+                      postfix: 'B',
+                      suffix: ticket.currency == "USD" ? '\$' : '',
+                    ),
                   ),
                 ],
               ),

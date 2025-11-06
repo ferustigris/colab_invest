@@ -7,6 +7,7 @@ class FinancialMetric:
         self.last_update = last_update
     
     def to_json(self):
+        print(f"Serializing {self.name} metric to JSON")
         return {
             "name": self.name,
             "value": self.value,

@@ -30,7 +30,7 @@ class StockDetails:
         self.ticker = ticker
         self.name = f"Company {ticker}"
         self.summary = f"Summary about company {ticker}"
-        
+        self.currency = "USD"
         # Financial metrics with initialized default values
         self.profit_growth_10_years = ProfitGrowth10Years()
         self.current_price = CurrentPrice()
@@ -59,40 +59,62 @@ class StockDetails:
         self.price_forecast_equity = PriceForecastEquity()
 
     def to_json(self):
-        return {
+        print(f"Starting to_json() for ticker: {self.ticker}")
+        
+        def serialize_value(obj):
+            """Helper function to handle complex numbers and other non-serializable objects"""
+            print(f"Serializing object of type: {type(obj).__name__}")
+            if isinstance(obj, complex):
+                print(f"Found complex number: {str(obj)}, converting to string")
+                return str(obj)
+            elif hasattr(obj, 'to_json'):
+                print(f"Object has to_json method, calling it")
+                result = obj.to_json()
+                return result
+            else:
+                return obj
+        
+        print("Building JSON dictionary...")
+        result = {
             "ticker": self.ticker,
+            "currency": self.currency,
             "name": self.name,
             "summary": self.summary,
-            "profitGrowth10Years": self.profit_growth_10_years.to_json(),
-            "currentPrice": self.current_price.to_json(),
-            "shares": self.shares.to_json(),
-            "sma10Years": self.sma_10_years.to_json(),
-            "priceForecastDiv": self.price_forecast_div.to_json(),
-            "priceForecastPE": self.price_forecast_pe.to_json(),
-            "priceForecastEquity": self.price_forecast_equity.to_json(),
-            "marketCap": self.market_cap.to_json(),
-            "revenue": self.revenue.to_json(),
-            "netIncome": self.net_income.to_json(),
-            "ebitda": self.ebitda.to_json(),
-            "nta": self.nta.to_json(),
-            "pe": self.pe.to_json(),
-            "fpe": self.fpe.to_json(),
-            "ps": self.ps.to_json(),
-            "evEbitda": self.ev_ebitda.to_json(),
-            "totalDebt": self.total_debt.to_json(),
-            "debtEbitda": self.debt_ebitda.to_json(),
-            "cash": self.cash.to_json(),
-            "dividend": self.dividend.to_json(),
-            "freeCashFlow": self.free_cash_flow.to_json(),
-            "buyback": self.buyback.to_json(),
-            "buybackPercent": self.buyback_percent.to_json(),
-            "freeCashFlowPerStock": self.free_cash_flow_per_stock.to_json()
+            "profitGrowth10Years": serialize_value(self.profit_growth_10_years),
+            "currentPrice": serialize_value(self.current_price),
+            "shares": serialize_value(self.shares),
+            "sma10Years": serialize_value(self.sma_10_years),
+            "priceForecastDiv": serialize_value(self.price_forecast_div),
+            "priceForecastPE": serialize_value(self.price_forecast_pe),
+            "priceForecastEquity": serialize_value(self.price_forecast_equity),
+            "marketCap": serialize_value(self.market_cap),
+            "revenue": serialize_value(self.revenue),
+            "netIncome": serialize_value(self.net_income),
+            "ebitda": serialize_value(self.ebitda),
+            "nta": serialize_value(self.nta),
+            "pe": serialize_value(self.pe),
+            "fpe": serialize_value(self.fpe),
+            "ps": serialize_value(self.ps),
+            "evEbitda": serialize_value(self.ev_ebitda),
+            "totalDebt": serialize_value(self.total_debt),
+            "debtEbitda": serialize_value(self.debt_ebitda),
+            "cash": serialize_value(self.cash),
+            "dividend": serialize_value(self.dividend),
+            "freeCashFlow": serialize_value(self.free_cash_flow),
+            "buyback": serialize_value(self.buyback),
+            "buybackPercent": serialize_value(self.buyback_percent),
+            "freeCashFlowPerStock": serialize_value(self.free_cash_flow_per_stock)
         }
+        
+        print(f"Completed to_json() for ticker: {self.ticker}, result keys: {result}")
+        return result
     
     def update_from_yahoo_data(self, yahoo_data):
         """
         Update financial metrics from Yahoo data
         """
+        self.name = yahoo_data.get("longName", self.name)
+        self.currency = yahoo_data.get("currency", "USD")
         self.profit_growth_10_years.get_load_for_ticker(self, yahoo_data)
         self.current_price.get_load_for_ticker(self, yahoo_data)
         self.shares.get_load_for_ticker(self, yahoo_data)

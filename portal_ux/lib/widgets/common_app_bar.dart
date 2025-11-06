@@ -22,10 +22,10 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0.5,
       automaticallyImplyLeading: false,
       title: Row(
-        children: [
-          Text("STV", style: TextStyle(overflow: TextOverflow.clip)),
-          if (!isMobileViewPort(context)) ...desktopActionsList(context),
-        ],
+        // children: [
+        //   Text("STV", style: TextStyle(overflow: TextOverflow.clip)),
+        //   if (!isMobileViewPort(context)) ...desktopActionsList(context),
+        // ],
       ),
       actions: [
         UserMenu(),

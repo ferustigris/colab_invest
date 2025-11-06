@@ -1,6 +1,7 @@
 class Ticket {
   final String ticker; // тикет
   final String name; // название
+  final String? currency; // валюта
   final String? summary; // краткое описание компании
   final double? profitGrowth10Years; // рост прибыли за последние 10 лет
   final double? currentPrice; // цена
@@ -36,6 +37,7 @@ class Ticket {
   Ticket({
     required this.ticker,
     required this.name,
+    this.currency,
     this.summary,
     this.profitGrowth10Years,
     this.currentPrice,
@@ -77,6 +79,7 @@ class Ticket {
       ticker: _parseStringValue(json['ticker']) ?? '',
       name: _parseStringValue(json['name']) ?? '',
       summary: _parseStringValue(json['summary']),
+      currency: _parseStringValue(json['currency']),
       profitGrowth10Years: _parseMetricValue(
         json['profitGrowth10Years'],
         comments,

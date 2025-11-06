@@ -5,7 +5,6 @@ import 'package:portal_ux/widgets/common_navigation_bar.dart';
 import 'package:portal_ux/widgets/ai_popup_chat.dart';
 import 'package:portal_ux/widgets/tickets_table.dart';
 import 'package:portal_ux/utils/is_mobile_view_port.dart';
-import 'package:portal_ux/l10n/app_localizations.dart';
 
 class TicketsView extends StatelessWidget {
   final String category;
@@ -35,25 +34,26 @@ class TicketsScreen extends StatefulWidget {
 class _TicketsScreenState extends State<TicketsScreen> {
   String get _pageTitle {
     switch (widget.category) {
-      case 'stocks':
-        return AppLocalizations.of(context)!.ticketsPageTitle;
-      case 'etfs':
+      case 'default':
+        return 'Stocks';
+      case 'nyse':
         return 'ETFs';
-      case 'bonds':
+      case 'euro':
         return 'Bonds';
       case 'crypto':
         return 'Crypto';
       case 'commodities':
         return 'Commodities';
       default:
-        return AppLocalizations.of(context)!.ticketsPageTitle;
+        return 'Stocks';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: _pageTitle),
+      appBar:
+          isMobileViewPort(context) ? CommonAppBar(title: _pageTitle) : null,
       body: TicketsTable(category: widget.category),
       bottomNavigationBar:
           isMobileViewPort(context) ? CommonNavigationBar() : null,

@@ -64,12 +64,12 @@ def yahoo(request, user):
         
         yahoo_data = yf.Ticker(ticker)
         print("Ticker info:", yahoo_data.info)
+        result = json.loads(yahoo_data)
 
         response = requests.post(f"{historizer_url}/{blob_name}", headers=request.headers, json={
-            "yahoo_data": yahoo_data.info, "lastUpdate": now_timestamp})
+            "yahoo_data": result, "lastUpdate": now_timestamp})
         response.raise_for_status()
 
-        result = json.loads(yahoo_data)
         result['lastUpdate'] = now_timestamp
         return result
 
