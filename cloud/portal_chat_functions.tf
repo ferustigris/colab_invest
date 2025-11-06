@@ -18,7 +18,7 @@ resource "google_cloudfunctions_function" "ask_chat_function" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
-    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/chat-history"
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
     FINANCE_ASSISTANT_BOT_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/ask_finance_assistent_chat"
     PORTAL_SUPPORT_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/ask-support-chat"
     HUMAN_SUPPORT_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/send_to_telegram_bot"
@@ -118,44 +118,6 @@ resource "google_storage_bucket_object" "ask_chat_source" {
   name   = "ask_chat-source.${data.archive_file.ask_chat_function_dist.output_md5}.zip"
   bucket = google_storage_bucket.src_bucket.name
   source = data.archive_file.ask_chat_function_dist.output_path
-}
-
-resource "google_cloudfunctions_function" "chat_history_function" {
-  name        = "chat-history"
-  description = "Save/get history of chat"
-  region      = "europe-west1"
-  entry_point = "chat_history"
-
-  runtime = "python311"
-
-  source_archive_bucket = google_storage_bucket.src_bucket.name
-  source_archive_object = google_storage_bucket_object.chat_history_source.name
-
-  trigger_http = true
-  service_account_email = google_service_account.default_compute.email
-
-  environment_variables = {
-    GOOGLE_FUNCTION_SOURCE = "main.py"
-    GCLOUD_PROJECT = data.google_project.project.project_id
-    CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
-  }
-  depends_on = [
-    google_storage_bucket_object.chat_history_source,
-    google_service_account.default_compute
-  ]
-}
-
-data "archive_file" "chat_history_function_dist" {
-  type        = "zip"
-  source_dir  = "./functions/chat_history"
-  output_path = "function/chat_history_dist${local.always_trigger}.zip"
-  depends_on = [local.always_trigger]
-}
-
-resource "google_storage_bucket_object" "chat_history_source" {
-  name   = "chat_history-source.${data.archive_file.chat_history_function_dist.output_md5}.zip"
-  bucket = google_storage_bucket.src_bucket.name
-  source = data.archive_file.chat_history_function_dist.output_path
 }
 
 #### telegram bot ####

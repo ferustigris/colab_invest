@@ -25,7 +25,7 @@ def is_valid_cache(yahoo_data_last_update, yahoo_data, cache_hours=24):
     """
     if not yahoo_data_last_update or not yahoo_data:
         return False
-    if not yahoo_data["currentPrice"] or not yahoo_data["marketCap"]:
+    if not "currentPrice" in yahoo_data or not "marketCap" in yahoo_data:
         return False
     
     try:
@@ -60,7 +60,7 @@ def yahoo(request, user):
     response.raise_for_status()
     yahoo_data = response.json().get("yahoo_data", {})   
     yahoo_data_last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
-    result = json.loads(yahoo_data)
+    result = yahoo_data
     result['lastUpdate'] = yahoo_data_last_update
 
     if not is_valid_cache(yahoo_data_last_update, yahoo_data):
@@ -68,7 +68,7 @@ def yahoo(request, user):
         
         yahoo_data = yf.Ticker(ticker)
         print("Ticker info:", yahoo_data.info)
-        result = json.loads(yahoo_data)
+        result = yahoo_data.info
 
         response = requests.post(f"{historizer_url}/{blob_name}", headers=request.headers, json={
             "yahoo_data": result, "lastUpdate": now_timestamp})

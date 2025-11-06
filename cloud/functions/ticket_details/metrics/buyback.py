@@ -6,7 +6,7 @@ from metrics.ai_metric import AiMetric
 class Buyback(AiMetric):
     def __init__(self):
         super().__init__(
-            "AnnualAvgBuybackUsd",
+            "AnnualAvgBuybackInUsd",
             0,
             "Total amount spent on share buybacks in last twelve months",
             0,

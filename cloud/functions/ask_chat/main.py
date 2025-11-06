@@ -70,9 +70,11 @@ def ask_chat(request, user):
     historizer_headers = {
         "uid": user["uid"]
     }
-    response = requests.get(historizer_url, headers=historizer_headers)
+    response = requests.get(f"{historizer_url}/chat_history.{user['uid']}.json", headers=historizer_headers)
     response.raise_for_status()
-    history = response.json().get("chat_history", [])   
+    history = response.json().get("chat_history", [])
+    print(f"Retrieved history with {history}")
+
     history.append(message)
 
     print(f"Retrieved history with {len(history)} items")
@@ -101,12 +103,12 @@ def ask_chat(request, user):
     match request_class:
         case "Financial assistant":
             print("Classified as financial assistant")
-            response = requests.post(FINANCE_ASSISTANT_BOT_URL, headers=request.headers, json={"chat_history": history, "prompt_relay": promptRelay})
+            response = requests.post(FINANCE_ASSISTANT_BOT_URL, headers=request.headers, json={"chat_history": history})
             response.raise_for_status()
             bot_response = response.text
         case "Portal support":
             print("Classified as Portal support")
-            response = requests.post(PORTAL_SUPPORT_URL, headers=request.headers, json={"chat_history": history, "prompt_relay": promptRelay})
+            response = requests.post(PORTAL_SUPPORT_URL, headers=request.headers, json={"chat_history": history})
             response.raise_for_status()
             bot_response = response.text
         case "Human support":
@@ -130,7 +132,7 @@ def ask_chat(request, user):
     history.append(assistant_entry)
 
     print(f"Storing updated history with {history} items")
-    response = requests.post(historizer_url, headers=historizer_headers, json={"chat_history": history})
+    response = requests.post(f"{historizer_url}/chat_history.{user['uid']}.json", headers=historizer_headers, json={"chat_history": history})
     response.raise_for_status()
 
     return bot_response

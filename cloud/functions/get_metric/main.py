@@ -11,7 +11,7 @@ import requests
 CONTEXT_LENGTH_MAX_INTERACTIONS = 10  # interaction is a user message with chatbot's response
 CONTEXT_MAX_TIME_INTERVAL_HOURS = 24
 ASSISTANT_ROLE_NAME = "nvr_support"
-GPT_MODEL = "gpt-4.1-nano"
+GPT_MODEL = "gpt-4.1-mini"
 SYSTEM_PROMPT = """
 You are looking for available finance metrics and stock information in internet.
 You must return the response in the format of 2 number separated by "|": 

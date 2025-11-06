@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:portal_ux/data/models/ticket.dart';
 import 'package:portal_ux/data/services/ticket_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TicketsTable extends StatefulWidget {
   final String category;
@@ -236,12 +239,12 @@ class _TicketsTableState extends State<TicketsTable> {
     final ratio = currentPrice / forecast;
 
     // Green: value less than current price by 20% (less than 80%)
-    if (ratio < 0.8 && ratio > 0) {
+    if (ratio < 0.9 && ratio > 0) {
       return Colors.green;
     }
 
     // Yellow: value between 80% and 150% of current price
-    if (ratio >= 0.8 && ratio <= 1.5) {
+    if (ratio >= 0.9 && ratio <= 1.2) {
       return Colors.orange;
     }
 
@@ -913,7 +916,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.buybackPercent,
+                                ticket.buybackPercent! * 100,
                                 decimals: 2,
                                 suffix: '%',
                               ),
@@ -983,160 +986,7 @@ class _TicketsTableState extends State<TicketsTable> {
   void _showTicketDetails(Ticket ticket) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('${ticket.ticker} - ${ticket.name}'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDetailRow('Ticker', ticket.ticker),
-                  _buildDetailRow('Company Name', ticket.name),
-                  _buildDetailRow(
-                    'Current Price',
-                    _formatNumber(ticket.currentPrice, suffix: '\$'),
-                  ),
-                  _buildDetailRow(
-                    'Market Cap',
-                    _formatNumber(
-                      ticket.marketCap,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Revenue',
-                    _formatNumber(
-                      ticket.revenue,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Net Income',
-                    _formatNumber(
-                      ticket.netIncome,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'EBITDA',
-                    _formatNumber(
-                      ticket.ebitda,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRowWithColor(
-                    'P/E Ratio',
-                    _formatNumber(ticket.pe, decimals: 1),
-                    _getPEColor(ticket.pe),
-                  ),
-                  _buildDetailRow(
-                    'FPE',
-                    _formatNumber(ticket.fpe, decimals: 1),
-                  ),
-                  _buildDetailRow(
-                    'Free Cash Flow per Stock',
-                    _formatNumber(
-                      ticket.freeCashFlowPerStock,
-                      decimals: 2,
-                      suffix: '%',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Buyback',
-                    _formatNumber(
-                      ticket.buybackPercent,
-                      decimals: 2,
-                      suffix: '%',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Dividend Yield',
-                    _formatNumber(ticket.dividend, suffix: '%'),
-                  ),
-                  _buildDetailRow(
-                    'P/S Ratio',
-                    _formatNumber(ticket.ps, decimals: 1),
-                  ),
-                  _buildDetailRow(
-                    'EV/EBITDA',
-                    _formatNumber(ticket.evEbitda, decimals: 1),
-                  ),
-                  _buildDetailRow(
-                    'Shares Outstanding',
-                    _formatNumber(ticket.shares, postfix: 'B'),
-                  ),
-                  _buildDetailRow(
-                    'SMA 10 Years',
-                    _formatNumber(ticket.sma10Years, decimals: 1),
-                  ),
-                  _buildDetailRow(
-                    'Price Forecast (DIV)',
-                    _formatNumber(
-                      ticket.priceForecastDiv,
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Price Forecast (PE)',
-                    _formatNumber(
-                      ticket.priceForecastPE,
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Price Forecast (Equity)',
-                    _formatNumber(
-                      ticket.priceForecastEquity,
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Profit Growth 10Y',
-                    _formatNumber(
-                      ticket.profitGrowth10Years! * 100,
-                      suffix: '%',
-                      decimals: 2,
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Free Cash Flow',
-                    _formatNumber(
-                      ticket.freeCashFlow,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Total Debt',
-                    _formatNumber(
-                      ticket.totalDebt,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                  _buildDetailRow(
-                    'Cash',
-                    _formatNumber(
-                      ticket.cash,
-                      postfix: 'B',
-                      suffix: ticket.currency == "USD" ? '\$' : '',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Close'),
-              ),
-            ],
-          ),
+      builder: (context) => _FinanceAssistantDialog(ticket: ticket),
     );
   }
 
@@ -1182,6 +1032,231 @@ class _TicketsTableState extends State<TicketsTable> {
   void _addToWatchlist(Ticket ticket) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${ticket.ticker} added to watchlist!')),
+    );
+  }
+}
+
+class _FinanceAssistantDialog extends StatefulWidget {
+  final Ticket ticket;
+
+  const _FinanceAssistantDialog({required this.ticket});
+
+  @override
+  State<_FinanceAssistantDialog> createState() =>
+      _FinanceAssistantDialogState();
+}
+
+class _FinanceAssistantDialogState extends State<_FinanceAssistantDialog> {
+  bool _isLoading = true;
+  String _response = '';
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _callFinanceAssistant();
+  }
+
+  Future<void> _callFinanceAssistant() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      // Get current user and token
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final idToken = await user.getIdToken();
+
+      // Prepare the request
+      final url =
+          'https://europe-west1-colab-invest-helper.cloudfunctions.net/ask_finance_assistent_chat';
+
+      // Create a comprehensive question about the stock
+      final question =
+          'Provide a detailed financial analysis of company ${widget.ticket.ticker} (${widget.ticket.name})';
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: json.encode({
+          'chat_history': [
+            {
+              "role": "user",
+              "content": question,
+              "timestamp":
+                  "2025-11-06 00:00:00.000", //#DateTime.now().toIso8601String(),
+            },
+          ],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _response = response.body.toString();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception(
+          'API call failed with status ${response.statusCode}: ${response.body}',
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to get analysis: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.analytics, color: Colors.blue),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${widget.ticket.ticker} - AI Analysis',
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+      content: Container(
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.7,
+        child:
+            _isLoading
+                ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Analyzing ${widget.ticket.ticker}...'),
+                    ],
+                  ),
+                )
+                : _error != null
+                ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error, color: Colors.red, size: 48),
+                    SizedBox(height: 16),
+                    Text(_error!),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _callFinanceAssistant,
+                      child: Text('Retry'),
+                    ),
+                  ],
+                )
+                : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Basic Info Header
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.ticket.ticker,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                Text(
+                                  widget.ticket.name,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Spacer(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '\$${widget.ticket.currentPrice?.toStringAsFixed(2) ?? 'N/A'}',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'P/E: ${widget.ticket.pe?.toStringAsFixed(1) ?? 'N/A'}',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+
+                      // AI Analysis Response
+                      Text(
+                        'AI Financial Analysis:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: SelectableText(
+                          _response,
+                          style: TextStyle(fontSize: 14, height: 1.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+      ),
+      actions: [
+        if (!_isLoading)
+          TextButton(
+            onPressed: _callFinanceAssistant,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.refresh, size: 16),
+                SizedBox(width: 4),
+                Text('Refresh Analysis'),
+              ],
+            ),
+          ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Close'),
+        ),
+      ],
     );
   }
 }

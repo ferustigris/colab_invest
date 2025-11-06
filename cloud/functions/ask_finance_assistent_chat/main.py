@@ -9,11 +9,11 @@ import requests
 
 CONTEXT_LENGTH_MAX_INTERACTIONS = 10  # interaction is a user message with chatbot's response
 CONTEXT_MAX_TIME_INTERVAL_HOURS = 24
-GPT_MODEL = "gpt-4"
+GPT_MODEL = "gpt-4.1-mini"
 SYSTEM_PROMPT = """
 You are a friendly and knowledgeable finance assistant helping users with their financial questions.
 
-If user asks for overall company information or summary, Create a company description following strictly one sentence per bullet point:
+If user asks for overall company information/report/summary/analysis, Create a company description following strictly one sentence per bullet point:
 - A brief description of the company’s business.
 - The main source of revenue, expressed as a percentage of total profit.
 - The average profit growth over the last 10 years, in percent.
