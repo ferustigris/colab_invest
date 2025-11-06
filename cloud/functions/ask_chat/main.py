@@ -11,7 +11,7 @@ CONTEXT_LENGTH_MAX_INTERACTIONS = 10  # interaction is a user message with chatb
 CONTEXT_MAX_TIME_INTERVAL_HOURS = 24
 ASSISTANT_ROLE_NAME = "assistant"
 USER_ROLE_NAME = "user"
-GPT_MODEL = "gpt-4o-mini"
+GPT_MODEL = "gpt‑5‑nano"
 SYSTEM_PROMPT = """
   You should classify user request into 4 categories: 
   - Sales assistant (e.g., product inquiries, pricing), 

@@ -48,7 +48,7 @@ class _MainPageState extends State<MainPage> {
         if (isMobileViewPort(context)) {
           return currentPage;
         } else {
-          // Для десктопа показываем горизонтальную навигацию сверху
+          // For desktop show horizontal navigation at top
           return Scaffold(
             body: Column(
               children: [
@@ -62,7 +62,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                   child: Row(
                     children: [
-                      // Логотип/название приложения
+                      // Logo/app name
                       Text(
                         'Investment Portal',
                         style: TextStyle(
@@ -71,7 +71,7 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                       SizedBox(width: 32),
-                      // Горизонтальная навигация
+                      // Horizontal navigation
                       Expanded(
                         child: Row(
                           children: [
@@ -108,7 +108,7 @@ class _MainPageState extends State<MainPage> {
                           ],
                         ),
                       ),
-                      // Действия справа (как в CommonAppBar)
+                      // Actions on the right (like in CommonAppBar)
                       UserMenu(),
                       ThemeSwitchAction(),
                       SizedBox(width: 8),

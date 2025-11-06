@@ -43,7 +43,7 @@ class CommonNavigationBar extends StatelessWidget {
           selectedIndex: navigationIndex,
           onDestinationSelected: (int value) {
             if (value != StateNotifiers.commonNavigationIndex.value) {
-              // Для AI чата используем push, для остальных - обновляем индекс
+              // For AI chat use push, for others - update index
               bool isAIChat = isMobileViewPort(context) && value == 5;
 
               if (isAIChat) {

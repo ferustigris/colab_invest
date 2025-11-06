@@ -1,5 +1,3 @@
-import os
-import requests
 from financial_metric import FinancialMetric
 
 
@@ -14,15 +12,21 @@ class BuybackPercent(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        get_metric_url = os.environ.get("GET_METRIC_URL")
+        print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
+        buyback = stock_details.buyback.value
+        shares_outstanding = stock_details.shares.value
+        price = stock_details.current_price.value
 
-        response = requests.post(f"{get_metric_url}/{stock_details.ticker}/{self.name}")
-        response.raise_for_status()
+        try:
+            self.value = buyback / (shares_outstanding * price)
+            self.data_quality = stock_details.buyback.data_quality * stock_details.shares.data_quality
+        except ZeroDivisionError:
+            print(f"Shares outstanding is zero for ticker {stock_details.ticker}, cannot compute {self.name}")
+            self.value = 0
+            self.data_quality = 0.0
+            self.comment += "\n - shares outstanding is zero, cannot compute metric"
+            return
 
-        self.value = response.json().get("value", 0)
-        self.data_quality = response.json().get("dataQuality", 0)
-        self.comment += response.json().get("rawData", "No data available")
+        self.data_quality = stock_details.buyback.data_quality * stock_details.shares.data_quality * stock_details.current_price.data_quality
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
-        self.last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
-        
-        print(f"BuybackPercent metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")

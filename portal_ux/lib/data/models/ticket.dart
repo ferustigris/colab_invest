@@ -1,24 +1,24 @@
 class Ticket {
-  final String ticker; // тикет
-  final String name; // название
-  final String? currency; // валюта
-  final String? summary; // краткое описание компании
-  final double? profitGrowth10Years; // рост прибыли за последние 10 лет
-  final double? currentPrice; // цена
-  final double? shares; // кол-во акций, млрд
+  final String ticker; // ticker
+  final String name; // name
+  final String? currency; // currency
+  final String? summary; // brief company description
+  final double? profitGrowth10Years; // profit growth over last 10 years
+  final double? currentPrice; // price
+  final double? shares; // number of shares, billions
   final double? sma10Years; // SMA 10 years
   final double? priceForecastDiv; // Price forecast DIV based
   final double? priceForecastPE; // Price forecast PE based
   final double? priceForecastEquity; // Price forecast equity based
-  final double? marketCap; // Капитализация на бирже, млрд
-  final double? revenue; // Выручка, revenue, млрд
-  final double? netIncome; // Чистая прибыль, net inc, млрд
-  final double? ebitda; // EBITDA, млрд
-  final double? nta; // NTA, млрд
+  final double? marketCap; // Market capitalization, billions
+  final double? revenue; // Revenue, billions
+  final double? netIncome; // Net profit, net inc, billions
+  final double? ebitda; // EBITDA, billions
+  final double? nta; // NTA, billions
   final double? pe; // P/E
   final double? ps; // P/S
   final double? evEbitda; // EV/EBITDA
-  final double? totalDebt; // Total Debt, млрд
+  final double? totalDebt; // Total Debt, billions
   final double? debtEbitda; // Debt/EBITDA
   final double? cash; // Cash, B
   final double? dividend; // Div, %

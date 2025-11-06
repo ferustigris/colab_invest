@@ -14,7 +14,7 @@ import 'package:portal_ux/views/device_registration_view.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Проверяем, не инициализирован ли Firebase уже
+  // Check if Firebase is already initialized
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

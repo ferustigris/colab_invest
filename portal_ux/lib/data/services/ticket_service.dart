@@ -85,7 +85,7 @@ class TicketService {
 
   static Future<List<Ticket>> getTickets() async {
     try {
-      // Получаем текущего пользователя и его токен
+      // Get current user and their token
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('User not authenticated');
@@ -93,7 +93,7 @@ class TicketService {
 
       final idToken = await user.getIdToken();
 
-      // Шаг 1: Получаем список тикеров
+      // Step 1: Get list of tickers
       final tickersResponse = await http.get(
         Uri.parse(AppConstants.cloudUrlTickets),
         headers: {
@@ -111,7 +111,7 @@ class TicketService {
       final List<dynamic> tickersData = json.decode(tickersResponse.body);
       final List<String> tickers = tickersData.cast<String>();
 
-      // Шаг 2: Для каждого тикера получаем полную информацию
+      // Step 2: For each ticker get full information
       final List<Ticket> tickets = [];
 
       for (String ticker in tickers) {
@@ -119,19 +119,19 @@ class TicketService {
           final ticket = await getTicketDetails(ticker);
           tickets.add(ticket);
         } catch (e) {
-          // Пропускаем тикеры с ошибками, но продолжаем загрузку остальных
-          // В production можно использовать proper logging библиотеку
+          // Skip tickers with errors, but continue loading others
+          // In production can use proper logging library
         }
       }
 
       return tickets;
     } catch (e) {
-      // Если не удалось получить список тикеров, используем mock список для тестирования ticket_details
+      // If failed to get ticker list, use mock list for testing ticket_details
       print(
         'Failed to get tickers list, using mock tickers to test ticket_details: $e',
       );
 
-      // Пробуем получить детальную информацию для mock тикеров
+      // Try to get detailed information for mock tickers
       final List<String> mockTickers = _getMockTickers();
       final List<Ticket> tickets = [];
 
@@ -143,7 +143,7 @@ class TicketService {
           print('Successfully loaded details for $ticker');
         } catch (detailError) {
           print('Failed to load details for $ticker: $detailError');
-          // Если и детальная информация не загружается, используем mock
+          // If detailed information also fails to load, use mock
           final mockTicket = _getMockTicketDetails(ticker);
           tickets.add(mockTicket);
         }
@@ -188,7 +188,7 @@ class TicketService {
     } catch (e) {
       print('Error in getTicketDetails for $ticker: $e');
 
-      // Проверяем, не CORS ли это ошибка
+      // Check if this is a CORS error
       if (e.toString().contains('CORS') ||
           e.toString().contains('Access-Control-Allow-Origin')) {
         print(
@@ -201,17 +201,17 @@ class TicketService {
   }
 
   static List<Ticket> _getMockTickets() {
-    // Симулируем получение списка тикеров и затем детальной информации для каждого
+    // Simulate getting ticker list and then detailed information for each
     final List<String> mockTickers = _getMockTickers();
     return mockTickers.map((ticker) => _getMockTicketDetails(ticker)).toList();
   }
 
-  /// Возвращает mock список тикеров
+  /// Returns mock ticker list
   static List<String> _getMockTickers() {
     return ['AAPL', 'MSFT', 'GOOGL', 'NVDA'];
   }
 
-  /// Возвращает mock детальную информацию для конкретного тикера
+  /// Returns mock detailed information for specific ticker
   static Ticket _getMockTicketDetails(String ticker) {
     switch (ticker) {
       case 'AAPL':

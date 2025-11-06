@@ -139,7 +139,6 @@ class StockDetails:
             self.dividend,
             self.free_cash_flow,
             self.buyback,
-            self.buyback_percent,
             self.free_cash_flow_per_stock
         ]
         
@@ -156,6 +155,7 @@ class StockDetails:
         forecast_metrics = [
             self.price_forecast_div,
             self.price_forecast_pe,
+            self.buyback_percent,
             self.price_forecast_equity
         ]
         
