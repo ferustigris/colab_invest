@@ -5,14 +5,14 @@ import 'package:portal_ux/data/models/ticket.dart';
 import 'package:portal_ux/data/app_constants.dart';
 
 class TicketService {
-  /// Stream-based метод для progressive loading тикетов
+  /// Stream-based method for progressive loading of tickets
   static Stream<List<Ticket>> getTicketsStream({
     String category = 'stocks',
   }) async* {
     List<Ticket> currentTickets = [];
 
     try {
-      // Получаем текущего пользователя и его токен
+      // Get current user and their token
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('User not authenticated');
@@ -20,7 +20,7 @@ class TicketService {
 
       final idToken = await user.getIdToken();
 
-      // Шаг 1: Получаем список тикеров
+      // Step 1: Get list of tickers
       final tickersResponse = await http.get(
         Uri.parse('${AppConstants.cloudUrlTickets}/$category'),
         headers: {
@@ -38,22 +38,22 @@ class TicketService {
       final List<dynamic> tickersData = json.decode(tickersResponse.body);
       final List<String> tickers = tickersData.cast<String>();
 
-      // Шаг 2: Для каждого тикера получаем полную информацию и эмитим обновление
+      // Step 2: For each ticker get full information and emit update
       for (String ticker in tickers) {
         try {
           final ticket = await getTicketDetails(ticker);
           currentTickets.add(ticket);
-          yield List.from(currentTickets); // Эмитим копию текущего списка
+          yield List.from(currentTickets); // Emit copy of current list
           await Future.delayed(
             Duration(milliseconds: 100),
-          ); // Задержка для визуализации
+          ); // Delay for visualization
         } catch (e) {
-          // Пропускаем тикеры с ошибками, но продолжаем загрузку остальных
+          // Skip tickers with errors, but continue loading others
           print('Failed to load $ticker: $e');
         }
       }
     } catch (e) {
-      // Если не удалось получить список тикеров, используем mock данные
+      // If failed to get ticker list, use mock data
       print('Failed to get tickers list, using mock data: $e');
 
       final List<String> mockTickers = _getMockTickers();
@@ -65,9 +65,9 @@ class TicketService {
           yield List.from(currentTickets);
           await Future.delayed(
             Duration(milliseconds: 100),
-          ); // Задержка для визуализации
+          ); // Delay for visualization
         } catch (detailError) {
-          // Используем mock данные если API недоступен
+          // Use mock data if API is unavailable
           print('Using mock data for $ticker due to error: $detailError');
           final mockTicket = _getMockTicketDetails(ticker);
           print(
@@ -77,7 +77,7 @@ class TicketService {
           yield List.from(currentTickets);
           await Future.delayed(
             Duration(milliseconds: 100),
-          ); // Задержка для визуализации
+          ); // Delay for visualization
         }
       }
     }
@@ -153,7 +153,7 @@ class TicketService {
     }
   }
 
-  /// Получает детальную информацию о конкретном тикете
+  /// Gets detailed information about a specific ticket
   static Future<Ticket> getTicketDetails(String ticker) async {
     print('Calling getTicketDetails for ticker: $ticker');
     print('URL: ${AppConstants.cloudUrlTicketDetails}/$ticker');

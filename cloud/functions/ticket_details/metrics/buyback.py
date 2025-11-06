@@ -1,3 +1,5 @@
+import os
+import requests
 from financial_metric import FinancialMetric
 
 
@@ -12,17 +14,15 @@ class Buyback(FinancialMetric):
         )
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
-        import time
-        print(f"Loading data for buyback metric for ticker {stock_details.ticker}")
+        get_metric_url = os.environ.get("GET_METRIC_URL")
+
+        response = requests.post(f"{get_metric_url}/{stock_details.ticker}/{self.name}")
+        response.raise_for_status()
+
+        self.value = float(response.json().get("value", 0))
+        self.data_quality = float(response.json().get("dataQuality", 0))
+        self.comment += response.json().get("rawData", "No data available")
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"
+        self.last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
         
-        # Estimate from operating cash flow - free cash flow (approximation)
-        if 'operatingCashflow' in yahoo_data and 'freeCashflow' in yahoo_data:
-            # This is a rough approximation
-            capex = yahoo_data['operatingCashflow'] - yahoo_data['freeCashflow']
-            self.value = max(0, capex * 0.3)  # Assume 30% might go to buybacks
-            self.data_quality = 0.3  # Low quality approximation
-            self.last_update = int(time.time())
-            print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            print(f"operatingCashflow or freeCashflow data not available for {stock_details.ticker}")
-            self.data_quality = 0.0
+        print(f"Buyback metric loaded successfully: value={self.value}, quality={self.data_quality}")

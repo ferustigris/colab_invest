@@ -113,31 +113,57 @@ class StockDetails:
         """
         Update financial metrics from Yahoo data
         """
+        import requests
+        
         self.name = yahoo_data.get("longName", self.name)
         self.currency = yahoo_data.get("currency", "USD")
-        self.profit_growth_10_years.get_load_for_ticker(self, yahoo_data)
-        self.current_price.get_load_for_ticker(self, yahoo_data)
-        self.shares.get_load_for_ticker(self, yahoo_data)
-        self.sma_10_years.get_load_for_ticker(self, yahoo_data)
-        self.market_cap.get_load_for_ticker(self, yahoo_data)
-        self.revenue.get_load_for_ticker(self, yahoo_data)
-        self.net_income.get_load_for_ticker(self, yahoo_data)
-        self.ebitda.get_load_for_ticker(self, yahoo_data)
-        self.nta.get_load_for_ticker(self, yahoo_data)
-        self.pe.get_load_for_ticker(self, yahoo_data)
-        self.fpe.get_load_for_ticker(self, yahoo_data)
-        self.ps.get_load_for_ticker(self, yahoo_data)
-        self.ev_ebitda.get_load_for_ticker(self, yahoo_data)
-        self.total_debt.get_load_for_ticker(self, yahoo_data)
-        self.debt_ebitda.get_load_for_ticker(self, yahoo_data)
-        self.cash.get_load_for_ticker(self, yahoo_data)
-        self.dividend.get_load_for_ticker(self, yahoo_data)
-        self.free_cash_flow.get_load_for_ticker(self, yahoo_data)
-        self.buyback.get_load_for_ticker(self, yahoo_data)
-        self.buyback_percent.get_load_for_ticker(self, yahoo_data)
-        self.free_cash_flow_per_stock.get_load_for_ticker(self, yahoo_data)
-        # Compute price forecasts based on previously loaded metrics
-        self.price_forecast_div.get_load_for_ticker(self, yahoo_data)
-        self.price_forecast_pe.get_load_for_ticker(self, yahoo_data)
-        self.price_forecast_equity.get_load_for_ticker(self, yahoo_data)
+        
+        # Create array of all metric objects
+        metrics = [
+            self.profit_growth_10_years,
+            self.current_price,
+            self.shares,
+            self.sma_10_years,
+            self.market_cap,
+            self.revenue,
+            self.net_income,
+            self.ebitda,
+            self.nta,
+            self.pe,
+            self.fpe,
+            self.ps,
+            self.ev_ebitda,
+            self.total_debt,
+            self.debt_ebitda,
+            self.cash,
+            self.dividend,
+            self.free_cash_flow,
+            self.buyback,
+            self.buyback_percent,
+            self.free_cash_flow_per_stock
+        ]
+        
+        # Process all basic metrics
+        for metric in metrics:
+            try:
+                metric.get_load_for_ticker(self, yahoo_data)
+                print(f"Successfully loaded metric: {metric.__class__.__name__}")
+            except (requests.exceptions.HTTPError, ValueError, TypeError) as e:
+                print(f"Error loading metric {metric.__class__.__name__}: {e}")
+                continue
+        
+        # Process computed price forecasts (these depend on previously loaded metrics)
+        forecast_metrics = [
+            self.price_forecast_div,
+            self.price_forecast_pe,
+            self.price_forecast_equity
+        ]
+        
+        for metric in forecast_metrics:
+            try:
+                metric.get_load_for_ticker(self, yahoo_data)
+                print(f"Successfully loaded forecast metric: {metric.__class__.__name__}")
+            except (requests.exceptions.HTTPError, ValueError, TypeError) as e:
+                print(f"Error loading forecast metric {metric.__class__.__name__}: {e}")
+                continue
         

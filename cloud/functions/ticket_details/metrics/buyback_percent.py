@@ -8,7 +8,7 @@ class BuybackPercent(FinancialMetric):
         super().__init__(
             "buybackPercent",
             0,
-            "Percentage of shares bought back relative to outstanding shares",
+            "Percentage of shares bought back relative to capitalization",
             0,
             "1970-01-01T00:00:00Z"
         )
@@ -21,3 +21,8 @@ class BuybackPercent(FinancialMetric):
 
         self.value = response.json().get("value", 0)
         self.data_quality = response.json().get("dataQuality", 0)
+        self.comment += response.json().get("rawData", "No data available")
+        self.comment += f"\n - current data quality: {self.data_quality:.2f}"
+        self.last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
+        
+        print(f"BuybackPercent metric loaded successfully: value={self.value}, quality={self.data_quality}")

@@ -37,7 +37,7 @@ class _TicketsTableState extends State<TicketsTable> {
       (ticketsList) {
         print('Stream update received: ${ticketsList.length} tickets');
         setState(() {
-          // Добавляем только новые тикеты (последний элемент)
+          // Add only new tickets (last element)
           if (ticketsList.length > tickets.length) {
             final newTickets = ticketsList.sublist(tickets.length);
             print('Adding ${newTickets.length} new tickets');
@@ -204,27 +204,27 @@ class _TicketsTableState extends State<TicketsTable> {
 
   Color _getProfitGrowthBorderColor(Ticket ticket) {
     final growth = ticket.profitGrowth10Years;
-    // Иначе используем стандартную логику
+    // Otherwise use standard logic
     return _getProfitGrowthColor(growth);
   }
 
   Color _getPEColor(double? pe) {
-    // Красный если ниже нуля или качество ниже 0.7
+    // Red if below zero or quality below 0.7
     if (pe == null || pe < 0) {
       return Colors.red;
     }
 
-    // Зеленый для 0-10
+    // Green for 0-10
     if (pe >= 0 && pe <= 10) {
       return Colors.green;
     }
 
-    // Желтый для 10-15
+    // Yellow for 10-15
     if (pe > 10 && pe <= 15) {
       return Colors.orange;
     }
 
-    // Красный для остальных случаев (>15)
+    // Red for other cases (>15)
     return Colors.red;
   }
 
@@ -235,17 +235,17 @@ class _TicketsTableState extends State<TicketsTable> {
 
     final ratio = currentPrice / forecast;
 
-    // Зеленый: значение меньше текущей цены на 20% (менее 80%)
+    // Green: value less than current price by 20% (less than 80%)
     if (ratio < 0.8 && ratio > 0) {
       return Colors.green;
     }
 
-    // Желтый: значение между 80% и 150% от текущей цены
+    // Yellow: value between 80% and 150% of current price
     if (ratio >= 0.8 && ratio <= 1.5) {
       return Colors.orange;
     }
 
-    // Красный в других случаях (больше 150%)
+    // Red in other cases (more than 150%)
     return Colors.red;
   }
 
@@ -254,7 +254,7 @@ class _TicketsTableState extends State<TicketsTable> {
     String metricName,
     double? forecast,
   ) {
-    // Иначе используем логику прогноза
+    // Otherwise use forecast logic
     return _getForecastColor(forecast, ticket.currentPrice);
   }
 
@@ -268,7 +268,7 @@ class _TicketsTableState extends State<TicketsTable> {
 
     Widget cellChild = child;
 
-    // Если качество ниже 0.7, добавляем красную рамку
+    // If quality below 0.7, add red border
     if (quality < 0.7) {
       cellChild = Container(
         padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
