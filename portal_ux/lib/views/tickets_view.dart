@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:portal_ux/widgets/auth_gate.dart';
 import 'package:portal_ux/widgets/common_app_bar.dart';
 import 'package:portal_ux/widgets/common_navigation_bar.dart';
 import 'package:portal_ux/widgets/ai_popup_chat.dart';
@@ -12,14 +11,9 @@ class TicketsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AuthGate(
-      page:
-          isMobileViewPort(context)
-              ? TicketsScreen(category: category)
-              : Stack(
-                children: [TicketsScreen(category: category), AIPopUpChat()],
-              ),
-    );
+    return isMobileViewPort(context)
+        ? TicketsScreen(category: category)
+        : Stack(children: [TicketsScreen(category: category), AIPopUpChat()]);
   }
 }
 

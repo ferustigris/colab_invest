@@ -78,7 +78,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goToHomePageAckButtonLabel => 'Understood. Go to Home Page';
 
   @override
-  String get generalWelcomeTitle => 'Welcome to Solvía Tech Vigilance!';
+  String get generalWelcomeTitle => 'Investment Portal - Sign In';
 
   @override
   String get passwordInputPlaceholder => 'Password';

@@ -79,7 +79,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Entendido. Ir a la Página de Inicio';
 
   @override
-  String get generalWelcomeTitle => '¡Bienvenido a Solvía Tech Vigilance!';
+  String get generalWelcomeTitle => 'Portal de Inversión - Iniciar Sesión';
 
   @override
   String get passwordInputPlaceholder => 'Contraseña';

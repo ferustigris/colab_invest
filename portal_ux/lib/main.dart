@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
       builder: (context, isLightMode, theAppLocale, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Solvía Tech Vigilance Portal',
+          title: 'Investment Portal',
           locale: theAppLocale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

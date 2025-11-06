@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:portal_ux/data/state_notifiers.dart';
 import 'package:portal_ux/views/tickets_view.dart';
 import 'package:portal_ux/utils/is_mobile_view_port.dart';
+import 'package:portal_ux/widgets/user_menu.dart';
+import 'package:portal_ux/widgets/theme_switch_action.dart';
+import 'package:portal_ux/widgets/auth_gate.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,6 +16,10 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
+    return AuthGate(page: _buildMainContent());
+  }
+
+  Widget _buildMainContent() {
     return ValueListenableBuilder<int>(
       valueListenable: StateNotifiers.commonNavigationIndex,
       builder: (context, selectedIndex, child) {
@@ -101,6 +108,10 @@ class _MainPageState extends State<MainPage> {
                           ],
                         ),
                       ),
+                      // Действия справа (как в CommonAppBar)
+                      UserMenu(),
+                      ThemeSwitchAction(),
+                      SizedBox(width: 8),
                     ],
                   ),
                 ),

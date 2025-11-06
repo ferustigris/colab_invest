@@ -109,7 +109,7 @@
         "description": "Label for the button to acknowledge successful registration" 
     },
 
-    "generalWelcomeTitle": "Welcome to Solvía Tech Vigilance!",
+    "generalWelcomeTitle": "Investment Portal - Sign In",
     "@generalWelcomeTitle": {
         "description": "general Welcome AppBar title" 
     },

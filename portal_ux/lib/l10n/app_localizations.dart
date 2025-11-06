@@ -233,7 +233,7 @@ abstract class AppLocalizations {
   /// general Welcome AppBar title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Solvía Tech Vigilance!'**
+  /// **'Investment Portal - Sign In'**
   String get generalWelcomeTitle;
 
   /// Password text input placeholder
