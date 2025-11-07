@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:portal_ux/data/app_constants.dart';
 import 'package:portal_ux/data/app_styles.dart';
@@ -109,8 +110,7 @@ class _AIChatWidgetState extends State<AIChatWidget> {
   }
 
   Future<void> _loadChatHistory() async {
-    if (_isLoading || _isLoadingHistory)
-      return; // Предотвращаем множественные запросы
+    if (_isLoading || _isLoadingHistory) return; // Prevent multiple requests
 
     setState(() {
       _isLoadingHistory = true;
@@ -153,7 +153,7 @@ class _AIChatWidgetState extends State<AIChatWidget> {
             );
           });
 
-          // Прокручиваем к концу при обновлении сообщений
+          // Scroll to end when updating messages
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (scrollController.hasClients) {
               scrollController.jumpTo(
@@ -163,13 +163,13 @@ class _AIChatWidgetState extends State<AIChatWidget> {
           });
         }
       } else {
-        // В случае ошибки логируем, но не показываем пользователю
-        print('Failed to load chat history: ${response.statusCode}');
-        print('Response body: ${utf8.decode(response.bodyBytes)}');
+        // Log error but don't show to user
+        debugPrint('Failed to load chat history: ${response.statusCode}');
+        debugPrint('Response body: ${utf8.decode(response.bodyBytes)}');
       }
     } catch (e) {
-      // В случае ошибки логируем, но не показываем пользователю
-      print('Error loading chat history: $e');
+      // Log error but don't show to user
+      debugPrint('Error loading chat history: $e');
     } finally {
       setState(() {
         _isLoadingHistory = false;

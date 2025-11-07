@@ -16,7 +16,7 @@ SYSTEM_PROMPT = """
   You should classify user request into 4 categories: 
   - Financial assistant (e.g., questions about companies, sentiments or economic data),
   - Portal support and questions (e.g., how-to questions), 
-  - Human support (when a human agent is required),
+  - Human support (when a human agent is required, feature proposal, bug report, donate, etc.),
   - other (what you cannot classify).
   Your response is only one word: "Financial assistant", "Portal support", "Human support", or "other".
   """
@@ -120,7 +120,7 @@ def ask_chat(request, user):
             data = {"chat_history": history, "chat_id": TELEGRAM_CHAT_ID, "message": message["content"]}
             response = requests.post(HUMAN_SUPPORT_URL, headers=min_headers, json=data)
             response.raise_for_status()
-            bot_response = response.text
+            bot_response = "I've forwarded your request to a human agent who will assist you shortly."
         case "other":
             print("Classified as other")
             bot_response = "I'm sorry, but I cannot assist with that request. Do you want me to connect you to a human?"

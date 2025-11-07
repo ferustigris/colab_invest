@@ -145,27 +145,31 @@ class _TicketsTableState extends State<TicketsTable> {
             aValue = a.priceForecastPE ?? 0;
             bValue = b.priceForecastPE ?? 0;
             break;
-          case 12: // Forecast Equity
+          case 12: // Forecast FPE
+            aValue = a.priceForecastFPE ?? 0;
+            bValue = b.priceForecastFPE ?? 0;
+            break;
+          case 13: // Forecast Equity
             aValue = a.priceForecastEquity ?? 0;
             bValue = b.priceForecastEquity ?? 0;
             break;
-          case 13: // P/E
+          case 14: // P/E
             aValue = a.pe ?? 0;
             bValue = b.pe ?? 0;
             break;
-          case 14: // FPE
+          case 15: // FPE
             aValue = a.fpe ?? 0;
             bValue = b.fpe ?? 0;
             break;
-          case 15: // Free Cash Flow per Stock
+          case 16: // Free Cash Flow per Stock
             aValue = a.freeCashFlowPerStock ?? 0;
             bValue = b.freeCashFlowPerStock ?? 0;
             break;
-          case 16: // Buyback Percent
+          case 17: // Buyback Percent
             aValue = a.buybackPercent ?? 0;
             bValue = b.buybackPercent ?? 0;
             break;
-          case 17: // Dividend
+          case 18: // Dividend
             aValue = a.dividend ?? 0;
             bValue = b.dividend ?? 0;
             break;
@@ -519,6 +523,17 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   DataColumn(
                     label: Text(
+                      'F.FPE',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
                       'F.Eq',
                       style: TextStyle(
                         fontSize: 13,
@@ -838,6 +853,46 @@ class _TicketsTableState extends State<TicketsTable> {
                             ),
                             ticket: ticket,
                             metricName: 'priceForecastPE',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getForecastColor(
+                                  ticket.priceForecastFPE,
+                                  ticket.currentPrice,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _getForecastBorderColor(
+                                    ticket,
+                                    'priceForecastFPE',
+                                    ticket.priceForecastFPE,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _formatNumber(
+                                  ticket.priceForecastFPE,
+                                  decimals: 0,
+                                  suffix: ticket.currency == "USD" ? '\$' : '',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _getForecastColor(
+                                    ticket.priceForecastFPE,
+                                    ticket.currentPrice,
+                                  ),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'priceForecastFPE',
                           ),
                           _buildDataCellWithTooltip(
                             child: Container(

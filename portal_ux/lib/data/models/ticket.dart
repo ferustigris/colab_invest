@@ -11,6 +11,7 @@ class Ticket {
   final double? sma10Years; // SMA 10 years
   final double? priceForecastDiv; // Price forecast DIV based
   final double? priceForecastPE; // Price forecast PE based
+  final double? priceForecastFPE; // Price forecast FPE based
   final double? priceForecastEquity; // Price forecast equity based
   final double? marketCap; // Market capitalization, billions
   final double? revenue; // Revenue, billions
@@ -62,6 +63,7 @@ class Ticket {
     this.dividend,
     this.peRatio,
     this.fpe,
+    this.priceForecastFPE,
     this.freeCashFlow,
     this.buyback,
     this.buybackPercent,
@@ -120,6 +122,12 @@ class Ticket {
       ),
       priceForecastEquity: _parseMetricValue(
         json['priceForecastEquity'],
+        comments,
+        dataQuality,
+        lastUpdates,
+      ),
+      priceForecastFPE: _parseMetricValue(
+        json['priceForecastFPE'],
         comments,
         dataQuality,
         lastUpdates,
@@ -277,6 +285,7 @@ class Ticket {
       'priceForecastDiv': priceForecastDiv,
       'priceForecastPE': priceForecastPE,
       'priceForecastEquity': priceForecastEquity,
+      'priceForecastFPE': priceForecastFPE,
       'marketCap': marketCap,
       'revenue': revenue,
       'netIncome': netIncome,

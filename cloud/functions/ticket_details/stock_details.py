@@ -5,6 +5,7 @@ from metrics.shares import Shares
 from metrics.sma_10_years import Sma10Years
 from metrics.price_forecast_div import PriceForecastDiv
 from metrics.price_forecast_pe import PriceForecastPE
+from metrics.price_forecast_fpe import PriceForecastFPE
 from metrics.price_forecast_equity import PriceForecastEquity
 from metrics.market_cap import MarketCap
 from metrics.revenue import Revenue
@@ -56,6 +57,7 @@ class StockDetails:
         # Computed price forecasts
         self.price_forecast_div = PriceForecastDiv()
         self.price_forecast_pe = PriceForecastPE()
+        self.price_forecast_fpe = PriceForecastFPE()
         self.price_forecast_equity = PriceForecastEquity()
 
     def to_json(self):
@@ -86,6 +88,7 @@ class StockDetails:
             "sma10Years": serialize_value(self.sma_10_years),
             "priceForecastDiv": serialize_value(self.price_forecast_div),
             "priceForecastPE": serialize_value(self.price_forecast_pe),
+            "priceForecastFPE": serialize_value(self.price_forecast_fpe),
             "priceForecastEquity": serialize_value(self.price_forecast_equity),
             "marketCap": serialize_value(self.market_cap),
             "revenue": serialize_value(self.revenue),
@@ -155,6 +158,7 @@ class StockDetails:
         forecast_metrics = [
             self.price_forecast_div,
             self.price_forecast_pe,
+            self.price_forecast_fpe,
             self.buyback_percent,
             self.price_forecast_equity
         ]
