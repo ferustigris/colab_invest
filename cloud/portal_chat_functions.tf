@@ -179,7 +179,7 @@ resource "google_cloudfunctions_function" "telegram_bot_handler" {
     GOOGLE_FUNCTION_SOURCE = "main.py"
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
-    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/chat-history"
+    HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
   }
   depends_on = [
     google_storage_bucket_object.telegram_bot_handler_source,

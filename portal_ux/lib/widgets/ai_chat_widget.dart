@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -20,15 +21,20 @@ class _AIChatWidgetState extends State<AIChatWidget> {
   final List<Map<String, String>> _messages = [];
   bool _isLoading = false;
   late FocusNode inputFocusNode;
+  bool _isLoadingHistory = false;
+  Timer? _historyTimer;
 
   @override
   void initState() {
     super.initState();
     inputFocusNode = FocusNode();
+    _loadChatHistory();
+    _startHistoryTimer();
   }
 
   @override
   void dispose() {
+    _historyTimer?.cancel();
     inputFocusNode.dispose();
     super.dispose();
   }
@@ -94,6 +100,81 @@ class _AIChatWidgetState extends State<AIChatWidget> {
         ),
       ],
     );
+  }
+
+  void _startHistoryTimer() {
+    _historyTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _loadChatHistory();
+    });
+  }
+
+  Future<void> _loadChatHistory() async {
+    if (_isLoading || _isLoadingHistory)
+      return; // Предотвращаем множественные запросы
+
+    setState(() {
+      _isLoadingHistory = true;
+    });
+
+    try {
+      final idToken = await StateNotifiers.user.value!.getIdToken();
+
+      final response = await http.get(
+        Uri.parse(
+          "${AppConstants.aiChatHistoryUrl}/chat_history.${StateNotifiers.user.value!.uid}.json",
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': '*/*',
+          'Authorization': 'Bearer $idToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        if (data['chat_history'] != null) {
+          final List<dynamic> historyMessages = data['chat_history'];
+
+          setState(() {
+            _messages.clear();
+            _messages.addAll(
+              historyMessages
+                  .map(
+                    (msg) => {
+                      'author': msg['role']?.toString() ?? 'Unknown',
+                      'content': msg['content']?.toString() ?? '',
+                      'timestamp':
+                          msg['timestamp']?.toString() ??
+                          DateTime.now().millisecondsSinceEpoch.toString(),
+                    },
+                  )
+                  .toList(),
+            );
+          });
+
+          // Прокручиваем к концу при обновлении сообщений
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (scrollController.hasClients) {
+              scrollController.jumpTo(
+                scrollController.position.maxScrollExtent,
+              );
+            }
+          });
+        }
+      } else {
+        // В случае ошибки логируем, но не показываем пользователю
+        print('Failed to load chat history: ${response.statusCode}');
+        print('Response body: ${utf8.decode(response.bodyBytes)}');
+      }
+    } catch (e) {
+      // В случае ошибки логируем, но не показываем пользователю
+      print('Error loading chat history: $e');
+    } finally {
+      setState(() {
+        _isLoadingHistory = false;
+      });
+    }
   }
 
   Future<void> _sendMessage(String userInput) async {

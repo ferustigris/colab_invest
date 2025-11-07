@@ -99,22 +99,26 @@ def ask_chat(request, user):
     request_class = response.json().get("choices", [])[0]["message"]['content']
     
     bot_response = "I'm sorry, but I cannot assist with that request. Do you want me to connect you to a human?"  # default
+    min_headers = {
+        "Content-Type": "application/json",
+        "Authorization": request.headers.get("Authorization", "")
+    }
 
     match request_class:
         case "Financial assistant":
             print("Classified as financial assistant")
-            response = requests.post(FINANCE_ASSISTANT_BOT_URL, headers=request.headers, json={"chat_history": history})
+            response = requests.post(FINANCE_ASSISTANT_BOT_URL, headers=min_headers, json={"chat_history": history})
             response.raise_for_status()
             bot_response = response.text
         case "Portal support":
             print("Classified as Portal support")
-            response = requests.post(PORTAL_SUPPORT_URL, headers=request.headers, json={"chat_history": history})
+            response = requests.post(PORTAL_SUPPORT_URL, headers=min_headers, json={"chat_history": history})
             response.raise_for_status()
             bot_response = response.text
         case "Human support":
             print("Classified as Human support")
             data = {"chat_history": history, "chat_id": TELEGRAM_CHAT_ID, "message": message["content"]}
-            response = requests.post(HUMAN_SUPPORT_URL, headers=request.headers, json=data)
+            response = requests.post(HUMAN_SUPPORT_URL, headers=min_headers, json=data)
             response.raise_for_status()
             bot_response = response.text
         case "other":

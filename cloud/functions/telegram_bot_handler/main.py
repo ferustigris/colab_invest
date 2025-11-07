@@ -43,19 +43,19 @@ def telegram_bot_handler(request):
             print(f"Reply from {user_name} to {original_user}: {text}")
 
             historizer_headers = {
-                "uid": original_user
+                "Content-Type": "application/json"
             }
-            response = requests.get(historizer_url, headers=historizer_headers)
+            response = requests.get(f"{historizer_url}/chat_history.{original_user}.json", headers=historizer_headers)
             response.raise_for_status()
             history = response.json().get("chat_history", [])
 
             history.append({
-                "role": "human_assistant",
+                "role": "assistant",
                 "content": text,
                 "timestamp": datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S.%f")
             })
             print(f"Storing updated history with {history} items")
-            response = requests.post(historizer_url, headers=historizer_headers, json={"chat_history": history})
+            response = requests.post(f"{historizer_url}/chat_history.{original_user}.json", headers=historizer_headers, json={"chat_history": history})
             response.raise_for_status()
 
             return {"ok": True, "message": "Reply processed"}, 200

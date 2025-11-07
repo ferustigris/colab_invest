@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:portal_ux/data/models/ticket.dart';
@@ -49,12 +50,12 @@ class TicketService {
           ); // Delay for visualization
         } catch (e) {
           // Skip tickers with errors, but continue loading others
-          print('Failed to load $ticker: $e');
+          debugPrint('Failed to load $ticker: $e');
         }
       }
     } catch (e) {
       // If failed to get ticker list, use mock data
-      print('Failed to get tickers list, using mock data: $e');
+      debugPrint('Failed to get tickers list, using mock data: $e');
 
       final List<String> mockTickers = _getMockTickers();
 
@@ -68,9 +69,9 @@ class TicketService {
           ); // Delay for visualization
         } catch (detailError) {
           // Use mock data if API is unavailable
-          print('Using mock data for $ticker due to error: $detailError');
+          debugPrint('Using mock data for $ticker due to error: $detailError');
           final mockTicket = _getMockTicketDetails(ticker);
-          print(
+          debugPrint(
             'Mock ticket created: ${mockTicket.ticker} - ${mockTicket.name}',
           );
           currentTickets.add(mockTicket);
@@ -127,7 +128,7 @@ class TicketService {
       return tickets;
     } catch (e) {
       // If failed to get ticker list, use mock list for testing ticket_details
-      print(
+      debugPrint(
         'Failed to get tickers list, using mock tickers to test ticket_details: $e',
       );
 
@@ -137,12 +138,12 @@ class TicketService {
 
       for (String ticker in mockTickers) {
         try {
-          print('Attempting to fetch details for $ticker');
+          debugPrint('Attempting to fetch details for $ticker');
           final ticket = await getTicketDetails(ticker);
           tickets.add(ticket);
-          print('Successfully loaded details for $ticker');
+          debugPrint('Successfully loaded details for $ticker');
         } catch (detailError) {
-          print('Failed to load details for $ticker: $detailError');
+          debugPrint('Failed to load details for $ticker: $detailError');
           // If detailed information also fails to load, use mock
           final mockTicket = _getMockTicketDetails(ticker);
           tickets.add(mockTicket);
@@ -155,8 +156,8 @@ class TicketService {
 
   /// Gets detailed information about a specific ticket
   static Future<Ticket> getTicketDetails(String ticker) async {
-    print('Calling getTicketDetails for ticker: $ticker');
-    print('URL: ${AppConstants.cloudUrlTicketDetails}/$ticker');
+    debugPrint('Calling getTicketDetails for ticker: $ticker');
+    debugPrint('URL: ${AppConstants.cloudUrlTicketDetails}/$ticker');
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -174,11 +175,11 @@ class TicketService {
         },
       );
 
-      print('Response status for $ticker: ${response.statusCode}');
+      debugPrint('Response status for $ticker: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = json.decode(response.body);
-        print('Successfully parsed JSON for $ticker');
+        debugPrint('Successfully parsed JSON for $ticker');
         return Ticket.fromJson(jsonData);
       } else {
         throw Exception(
@@ -186,24 +187,18 @@ class TicketService {
         );
       }
     } catch (e) {
-      print('Error in getTicketDetails for $ticker: $e');
+      debugPrint('Error in getTicketDetails for $ticker: $e');
 
       // Check if this is a CORS error
       if (e.toString().contains('CORS') ||
           e.toString().contains('Access-Control-Allow-Origin')) {
-        print(
+        debugPrint(
           'CORS error detected for $ticker, using mock data until server CORS is configured',
         );
       }
 
       throw Exception('Failed to get ticket details for $ticker: $e');
     }
-  }
-
-  static List<Ticket> _getMockTickets() {
-    // Simulate getting ticker list and then detailed information for each
-    final List<String> mockTickers = _getMockTickers();
-    return mockTickers.map((ticker) => _getMockTicketDetails(ticker)).toList();
   }
 
   /// Returns mock ticker list

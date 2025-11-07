@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Ticket {
   final String ticker; // ticker
   final String name; // name
@@ -70,7 +72,7 @@ class Ticket {
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
-    print('Parsing JSON for ticket: ${json['ticker']} - ${json['name']}');
+    debugPrint('Parsing JSON for ticket: ${json['ticker']} - ${json['name']}');
     final comments = <String, String>{};
     final dataQuality = <String, double>{};
     final lastUpdates = <String, DateTime?>{};
@@ -210,7 +212,7 @@ class Ticket {
       lastUpdates: lastUpdates,
     );
 
-    print(
+    debugPrint(
       'Created ticket: ${ticket.ticker} - ${ticket.name}, price: ${ticket.currentPrice}',
     );
     return ticket;

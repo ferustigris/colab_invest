@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:portal_ux/data/models/ticket.dart';
 import 'package:portal_ux/data/services/ticket_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class TicketsTable extends StatefulWidget {
   final String category;
@@ -38,14 +40,14 @@ class _TicketsTableState extends State<TicketsTable> {
 
     TicketService.getTicketsStream(category: widget.category).listen(
       (ticketsList) {
-        print('Stream update received: ${ticketsList.length} tickets');
+        debugPrint('Stream update received: ${ticketsList.length} tickets');
         setState(() {
           // Add only new tickets (last element)
           if (ticketsList.length > tickets.length) {
             final newTickets = ticketsList.sublist(tickets.length);
-            print('Adding ${newTickets.length} new tickets');
+            debugPrint('Adding ${newTickets.length} new tickets');
             for (final ticket in newTickets) {
-              print('Adding ticket: ${ticket.ticker}');
+              debugPrint('Adding ticket: ${ticket.ticker}');
             }
             tickets.addAll(newTickets);
             loadedCount = tickets.length;
@@ -990,39 +992,6 @@ class _TicketsTableState extends State<TicketsTable> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('$label:', style: TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRowWithColor(
-    String label,
-    String value,
-    Color valueColor,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('$label:', style: TextStyle(fontWeight: FontWeight.bold)),
-          Text(
-            value,
-            style: TextStyle(color: valueColor, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showAnalytics(Ticket ticket) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Analytics for ${ticket.ticker} coming soon...')),
@@ -1091,8 +1060,9 @@ class _FinanceAssistantDialogState extends State<_FinanceAssistantDialog> {
             {
               "role": "user",
               "content": question,
-              "timestamp":
-                  "2025-11-06 00:00:00.000", //#DateTime.now().toIso8601String(),
+              "timestamp": DateFormat(
+                'yyyy-MM-dd HH:mm:ss.SSS',
+              ).format(DateTime.now()),
             },
           ],
         }),

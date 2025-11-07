@@ -18,7 +18,7 @@ class AppConstants {
   static final String cloudUrlTicketDetails =
       '$cloudFunctionsBaseUrl/ticket_details';
   static final String aiModelEndpointUrl = '$cloudFunctionsBaseUrl/ask-chat';
-
+  static final String aiChatHistoryUrl = '$cloudFunctionsBaseUrl/history';
   static const Map<String, String> userManualUrlMap = {
     "en": "/assets/assets/documents/user_manual.en.pdf",
     "es": "/assets/assets/documents/user_manual.es.pdf",
