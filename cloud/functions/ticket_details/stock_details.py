@@ -4,6 +4,7 @@ from metrics.current_price import CurrentPrice
 from metrics.shares import Shares
 from metrics.sma_10_years import Sma10Years
 from metrics.price_forecast_div import PriceForecastDiv
+from metrics.price_forecast_div_buyback import PriceForecastDivBuyback
 from metrics.price_forecast_pe import PriceForecastPE
 from metrics.price_forecast_fpe import PriceForecastFPE
 from metrics.price_forecast_equity import PriceForecastEquity
@@ -56,6 +57,7 @@ class StockDetails:
         self.free_cash_flow_per_stock = FreeCashFlowPerStock()
         # Computed price forecasts
         self.price_forecast_div = PriceForecastDiv()
+        self.price_forecast_div_buyback = PriceForecastDivBuyback()
         self.price_forecast_pe = PriceForecastPE()
         self.price_forecast_fpe = PriceForecastFPE()
         self.price_forecast_equity = PriceForecastEquity()
@@ -87,6 +89,7 @@ class StockDetails:
             "shares": serialize_value(self.shares),
             "sma10Years": serialize_value(self.sma_10_years),
             "priceForecastDiv": serialize_value(self.price_forecast_div),
+            "priceForecastDivBuyback": serialize_value(self.price_forecast_div_buyback),
             "priceForecastPE": serialize_value(self.price_forecast_pe),
             "priceForecastFPE": serialize_value(self.price_forecast_fpe),
             "priceForecastEquity": serialize_value(self.price_forecast_equity),
@@ -155,11 +158,13 @@ class StockDetails:
                 continue
         
         # Process computed price forecasts (these depend on previously loaded metrics)
+        # The order here matters if there are dependencies among the forecasts
         forecast_metrics = [
+            self.buyback_percent,
             self.price_forecast_div,
+            self.price_forecast_div_buyback,
             self.price_forecast_pe,
             self.price_forecast_fpe,
-            self.buyback_percent,
             self.price_forecast_equity
         ]
         

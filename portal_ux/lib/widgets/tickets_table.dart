@@ -138,38 +138,42 @@ class _TicketsTableState extends State<TicketsTable> {
             bValue = b.nta ?? 0;
             break;
           case 10: // Forecast DIV
-            aValue = a.priceForecastDiv ?? 0;
-            bValue = b.priceForecastDiv ?? 0;
+            aValue = a.currentPrice! / (a.priceForecastDiv ?? 1);
+            bValue = b.currentPrice! / (b.priceForecastDiv ?? 1);
             break;
           case 11: // Forecast PE
-            aValue = a.priceForecastPE ?? 0;
-            bValue = b.priceForecastPE ?? 0;
+            aValue = a.currentPrice! / (a.priceForecastPE ?? 1);
+            bValue = b.currentPrice! / (b.priceForecastPE ?? 1);
             break;
           case 12: // Forecast FPE
-            aValue = a.priceForecastFPE ?? 0;
-            bValue = b.priceForecastFPE ?? 0;
+            aValue = a.currentPrice! / (a.priceForecastFPE ?? 1);
+            bValue = b.currentPrice! / (b.priceForecastFPE ?? 1);
             break;
           case 13: // Forecast Equity
-            aValue = a.priceForecastEquity ?? 0;
-            bValue = b.priceForecastEquity ?? 0;
+            aValue = a.currentPrice! / (a.priceForecastEquity ?? 1);
+            bValue = b.currentPrice! / (b.priceForecastEquity ?? 1);
             break;
-          case 14: // P/E
+          case 14: // Forecast DivBuyback
+            aValue = a.currentPrice! / (a.priceForecastDivBuyback ?? 1);
+            bValue = b.currentPrice! / (b.priceForecastDivBuyback ?? 1);
+            break;
+          case 15: // P/E
             aValue = a.pe ?? 0;
             bValue = b.pe ?? 0;
             break;
-          case 15: // FPE
+          case 16: // FPE
             aValue = a.fpe ?? 0;
             bValue = b.fpe ?? 0;
             break;
-          case 16: // Free Cash Flow per Stock
+          case 17: // Free Cash Flow per Stock
             aValue = a.freeCashFlowPerStock ?? 0;
             bValue = b.freeCashFlowPerStock ?? 0;
             break;
-          case 17: // Buyback Percent
+          case 18: // Buyback Percent
             aValue = a.buybackPercent ?? 0;
             bValue = b.buybackPercent ?? 0;
             break;
-          case 18: // Dividend
+          case 19: // Dividend
             aValue = a.dividend ?? 0;
             bValue = b.dividend ?? 0;
             break;
@@ -535,6 +539,17 @@ class _TicketsTableState extends State<TicketsTable> {
                   DataColumn(
                     label: Text(
                       'F.Eq',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'F.DivBB',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -933,6 +948,46 @@ class _TicketsTableState extends State<TicketsTable> {
                             ),
                             ticket: ticket,
                             metricName: 'priceForecastEquity',
+                          ),
+                          _buildDataCellWithTooltip(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getForecastColor(
+                                  ticket.priceForecastDivBuyback,
+                                  ticket.currentPrice,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _getForecastBorderColor(
+                                    ticket,
+                                    'priceForecastDivBuyback',
+                                    ticket.priceForecastDivBuyback,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _formatNumber(
+                                  ticket.priceForecastDivBuyback,
+                                  decimals: 0,
+                                  suffix: ticket.currency == "USD" ? '\$' : '',
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _getForecastColor(
+                                    ticket.priceForecastDivBuyback,
+                                    ticket.currentPrice,
+                                  ),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ticket: ticket,
+                            metricName: 'priceForecastDivBuyback',
                           ),
                           _buildDataCellWithTooltip(
                             child: Text(

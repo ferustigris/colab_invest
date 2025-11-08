@@ -13,6 +13,7 @@ class Ticket {
   final double? priceForecastPE; // Price forecast PE based
   final double? priceForecastFPE; // Price forecast FPE based
   final double? priceForecastEquity; // Price forecast equity based
+  final double? priceForecastDivBuyback; // Price forecast DivBuyback based
   final double? marketCap; // Market capitalization, billions
   final double? revenue; // Revenue, billions
   final double? netIncome; // Net profit, net inc, billions
@@ -49,6 +50,7 @@ class Ticket {
     this.priceForecastDiv,
     this.priceForecastPE,
     this.priceForecastEquity,
+    this.priceForecastDivBuyback,
     this.marketCap,
     this.revenue,
     this.netIncome,
@@ -122,6 +124,12 @@ class Ticket {
       ),
       priceForecastEquity: _parseMetricValue(
         json['priceForecastEquity'],
+        comments,
+        dataQuality,
+        lastUpdates,
+      ),
+      priceForecastDivBuyback: _parseMetricValue(
+        json['priceForecastDivBuyback'],
         comments,
         dataQuality,
         lastUpdates,

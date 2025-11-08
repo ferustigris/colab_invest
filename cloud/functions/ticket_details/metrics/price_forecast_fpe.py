@@ -22,7 +22,7 @@ class PriceForecastFPE(FinancialMetric):
         if growth <= 0 or fpe <= 0:
             self.value = 0
             self.data_quality = 0.0
-            self.comment += f"\n - Invalid growth ({growth}) or Forward P/E ({fpe}) value"
+            self.comment += f"\n - Invalid growth ({growth:.2f}) or Forward P/E ({fpe:.2f}) value"
             return
 
         self.value = (8.5 + 2 * (pow(growth, 1/10) - 1) * 100) * price / fpe

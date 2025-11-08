@@ -52,12 +52,12 @@ class MetricsCompositor(FinancialMetric):
 
         self.comment += "\n - last update on " + yahoo_data['lastUpdate']
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
-        self.comment += f"\n - max {self.name} among methods: {max_value}, min {self.name} among methods: {min_value}"
+        self.comment += f"\n - max {self.name} among methods: {max_value:.2f}, min {self.name} among methods: {min_value:.2f}"
         self.comment += f"\n - amount of valid methods used: {len(valid_metrics)}"
         
         # Add details for each child metric
         for metric in self.methods:
-            self.comment += f"\n - {metric.name}: value={metric.value}, quality={metric.data_quality:.2f}"
+            self.comment += f"\n - {metric.name}: value={metric.value:.2f}, quality={metric.data_quality:.2f}"
         self.last_update = yahoo_data['lastUpdate']
         print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
 
