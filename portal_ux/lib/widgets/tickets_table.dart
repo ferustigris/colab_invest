@@ -353,7 +353,13 @@ class _TicketsTableState extends State<TicketsTable> {
               ),
               SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed: _loadTicketsStream,
+                onPressed:
+                    isLoading
+                        ? null
+                        : () async {
+                          await TicketService.clearAllCache();
+                          _loadTicketsStream();
+                        },
                 icon:
                     isLoading
                         ? SizedBox(
@@ -369,8 +375,25 @@ class _TicketsTableState extends State<TicketsTable> {
                   style: TextStyle(fontSize: 11),
                 ),
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 ),
+              ),
+            ],
+          ),
+        ),
+
+        // Cache status info
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 12, color: Colors.grey),
+              SizedBox(width: 4),
+              Text(
+                _getCacheStatusText(),
+                style: TextStyle(fontSize: 10, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -1112,6 +1135,11 @@ class _TicketsTableState extends State<TicketsTable> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${ticket.ticker} added to watchlist!')),
     );
+  }
+
+  String _getCacheStatusText() {
+    final status = TicketService.getCacheStatus();
+    return 'Cache: ${status['ticketsCache']} lists, ${status['detailsCache']} details (${status['cacheDuration']}min TTL)';
   }
 }
 

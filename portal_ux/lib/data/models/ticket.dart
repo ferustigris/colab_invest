@@ -282,40 +282,79 @@ class Ticket {
   }
 
   Map<String, dynamic> toJson() {
+    // Helper function to create metric object with metadata
+    dynamic createMetricObject(String fieldName, dynamic value) {
+      if (value == null) return null;
+
+      final comment = comments[fieldName];
+      final quality = dataQuality[fieldName];
+      final lastUpdate = lastUpdates[fieldName];
+
+      // If no metadata exists, return simple value
+      if (comment == null && quality == null && lastUpdate == null) {
+        return value;
+      }
+
+      // Return object with metadata
+      final result = <String, dynamic>{'name': fieldName, 'value': value};
+
+      if (comment != null) result['comment'] = comment;
+      if (quality != null) result['dataQuality'] = quality;
+      if (lastUpdate != null) {
+        result['lastUpdate'] = lastUpdate.toIso8601String();
+      }
+
+      return result;
+    }
+
     return {
       'ticker': ticker,
       'name': name,
       'summary': summary,
-      'profitGrowth10Years': profitGrowth10Years,
-      'currentPrice': currentPrice,
-      'shares': shares,
-      'sma10Years': sma10Years,
-      'priceForecastDiv': priceForecastDiv,
-      'priceForecastPE': priceForecastPE,
-      'priceForecastEquity': priceForecastEquity,
-      'priceForecastFPE': priceForecastFPE,
-      'marketCap': marketCap,
-      'revenue': revenue,
-      'netIncome': netIncome,
-      'ebitda': ebitda,
-      'nta': nta,
-      'pe': pe,
-      'ps': ps,
-      'evEbitda': evEbitda,
-      'totalDebt': totalDebt,
-      'debtEbitda': debtEbitda,
-      'cash': cash,
-      'dividend': dividend,
-      'peRatio': peRatio,
-      'fpe': fpe,
-      'freeCashFlow': freeCashFlow,
-      'buyback': buyback,
-      'buybackPercent': buybackPercent,
-      'freeCashFlowPerStock': freeCashFlowPerStock,
-      'comments': comments,
-      'dataQuality': dataQuality,
-      'lastUpdates': lastUpdates.map(
-        (key, value) => MapEntry(key, value?.toIso8601String()),
+      'profitGrowth10Years': createMetricObject(
+        'profitGrowth10Years',
+        profitGrowth10Years,
+      ),
+      'currentPrice': createMetricObject('currentPrice', currentPrice),
+      'shares': createMetricObject('shares', shares),
+      'sma10Years': createMetricObject('sma10Years', sma10Years),
+      'priceForecastDiv': createMetricObject(
+        'priceForecastDiv',
+        priceForecastDiv,
+      ),
+      'priceForecastPE': createMetricObject('priceForecastPE', priceForecastPE),
+      'priceForecastEquity': createMetricObject(
+        'priceForecastEquity',
+        priceForecastEquity,
+      ),
+      'priceForecastDivBuyback': createMetricObject(
+        'priceForecastDivBuyback',
+        priceForecastDivBuyback,
+      ),
+      'priceForecastFPE': createMetricObject(
+        'priceForecastFPE',
+        priceForecastFPE,
+      ),
+      'marketCap': createMetricObject('marketCap', marketCap),
+      'revenue': createMetricObject('revenue', revenue),
+      'netIncome': createMetricObject('netIncome', netIncome),
+      'ebitda': createMetricObject('ebitda', ebitda),
+      'nta': createMetricObject('nta', nta),
+      'pe': createMetricObject('pe', pe),
+      'ps': createMetricObject('ps', ps),
+      'evEbitda': createMetricObject('evEbitda', evEbitda),
+      'totalDebt': createMetricObject('totalDebt', totalDebt),
+      'debtEbitda': createMetricObject('debtEbitda', debtEbitda),
+      'cash': createMetricObject('cash', cash),
+      'dividend': createMetricObject('dividend', dividend),
+      'peRatio': createMetricObject('peRatio', peRatio),
+      'fpe': createMetricObject('fpe', fpe),
+      'freeCashFlow': createMetricObject('freeCashFlow', freeCashFlow),
+      'buyback': createMetricObject('buyback', buyback),
+      'buybackPercent': createMetricObject('buybackPercent', buybackPercent),
+      'freeCashFlowPerStock': createMetricObject(
+        'freeCashFlowPerStock',
+        freeCashFlowPerStock,
       ),
     };
   }
