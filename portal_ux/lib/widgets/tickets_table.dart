@@ -431,15 +431,20 @@ class _TicketsTableState extends State<TicketsTable> {
           ),
         ),
 
-        // Cache status info
+        // Cache status info with table summary
         Padding(
-          padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+          padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 4.0),
           child: Row(
             children: [
               Icon(Icons.info_outline, size: 12, color: Colors.grey),
               SizedBox(width: 4),
               Text(
                 _getCacheStatusText(),
+                style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+              ),
+              Spacer(),
+              Text(
+                _getTableSummaryText(),
                 style: TextStyle(fontSize: 10, color: Colors.grey[600]),
               ),
             ],
@@ -1242,6 +1247,64 @@ class _TicketsTableState extends State<TicketsTable> {
   String _getCacheStatusText() {
     final status = TicketService.getCacheStatus();
     return 'Cache: ${status['ticketsCache']} lists, ${status['detailsCache']} details (${status['cacheDuration']}min TTL)';
+  }
+
+  String _getTableSummaryText() {
+    final filtered = filteredTickets;
+    if (filtered.isEmpty) return 'No data';
+
+    final summary = _calculateTableSummary(filtered);
+    return 'Expected Growth: ${summary['expectedGrowth']}% | Avg Dividend: ${summary['avgDividend']}% | Avg P/E: ${summary['avgPE']}';
+  }
+
+  Map<String, String> _calculateTableSummary(List<Ticket> tickets) {
+    if (tickets.isEmpty) {
+      return {'expectedGrowth': 'N/A', 'avgDividend': 'N/A', 'avgPE': 'N/A'};
+    }
+
+    // Calculate expected growth based on F.Avg vs current price
+    final validGrowthData = <double>[];
+    for (final ticket in tickets) {
+      final currentPrice = ticket.currentPrice;
+      final forecastAvg = _calculateForecastAverage(ticket);
+      if (currentPrice != null && forecastAvg != null && currentPrice > 0) {
+        final growth = ((forecastAvg - currentPrice) / currentPrice) * 100;
+        validGrowthData.add(growth);
+      }
+    }
+
+    // Calculate average dividend
+    final validDividends =
+        tickets
+            .where((t) => t.dividend != null)
+            .map((t) => t.dividend! * 100)
+            .toList();
+
+    // Calculate average P/E
+    final validPEs =
+        tickets
+            .where((t) => t.pe != null && t.pe! > 0)
+            .map((t) => t.pe!)
+            .toList();
+
+    return {
+      'expectedGrowth':
+          validGrowthData.isEmpty
+              ? 'N/A'
+              : (validGrowthData.reduce((a, b) => a + b) /
+                      validGrowthData.length)
+                  .toStringAsFixed(1),
+      'avgDividend':
+          validDividends.isEmpty
+              ? 'N/A'
+              : (validDividends.reduce((a, b) => a + b) / validDividends.length)
+                  .toStringAsFixed(1),
+      'avgPE':
+          validPEs.isEmpty
+              ? 'N/A'
+              : (validPEs.reduce((a, b) => a + b) / validPEs.length)
+                  .toStringAsFixed(1),
+    };
   }
 
   double? _calculateForecastAverage(Ticket ticket) {
