@@ -166,23 +166,27 @@ class _TicketsTableState extends State<TicketsTable> {
             aValue = a.currentPrice! / (a.priceForecastDivBuyback ?? 1);
             bValue = b.currentPrice! / (b.priceForecastDivBuyback ?? 1);
             break;
-          case 15: // P/E
+          case 15: // Forecast Average
+            aValue = _calculateForecastAverage(a);
+            bValue = _calculateForecastAverage(b);
+            break;
+          case 16: // P/E
             aValue = a.pe ?? 0;
             bValue = b.pe ?? 0;
             break;
-          case 16: // FPE
+          case 17: // FPE
             aValue = a.fpe ?? 0;
             bValue = b.fpe ?? 0;
             break;
-          case 17: // Free Cash Flow per Stock
+          case 18: // Free Cash Flow per Stock
             aValue = a.freeCashFlowPerStock ?? 0;
             bValue = b.freeCashFlowPerStock ?? 0;
             break;
-          case 18: // Buyback Percent
+          case 19: // Buyback Percent
             aValue = a.buybackPercent ?? 0;
             bValue = b.buybackPercent ?? 0;
             break;
-          case 19: // Dividend
+          case 20: // Dividend
             aValue = a.dividend ?? 0;
             bValue = b.dividend ?? 0;
             break;
@@ -626,6 +630,17 @@ class _TicketsTableState extends State<TicketsTable> {
                   ),
                   DataColumn(
                     label: Text(
+                      'F.Avg',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onSort: _onSort,
+                    numeric: true,
+                  ),
+                  DataColumn(
+                    label: Text(
                       'P/E',
                       style: TextStyle(
                         fontSize: 13,
@@ -1055,6 +1070,50 @@ class _TicketsTableState extends State<TicketsTable> {
                             ticket: ticket,
                             metricName: 'priceForecastDivBuyback',
                           ),
+                          (() {
+                            // Ensure quality is calculated before displaying
+                            _updateTicketWithForecastAverageQuality(ticket);
+                            return _buildDataCellWithTooltip(
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getForecastColor(
+                                    _calculateForecastAverage(ticket),
+                                    ticket.currentPrice,
+                                  ).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: _getForecastColor(
+                                      _calculateForecastAverage(ticket),
+                                      ticket.currentPrice,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  _formatNumber(
+                                    _calculateForecastAverage(ticket),
+                                    decimals: 0,
+                                    suffix:
+                                        ticket.currency == "USD" ? '\$' : '',
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: _getForecastColor(
+                                      _calculateForecastAverage(ticket),
+                                      ticket.currentPrice,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              ticket: ticket,
+                              metricName: 'forecastAverage',
+                            );
+                          })(),
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(ticket.pe, decimals: 0),
@@ -1183,6 +1242,103 @@ class _TicketsTableState extends State<TicketsTable> {
   String _getCacheStatusText() {
     final status = TicketService.getCacheStatus();
     return 'Cache: ${status['ticketsCache']} lists, ${status['detailsCache']} details (${status['cacheDuration']}min TTL)';
+  }
+
+  double? _calculateForecastAverage(Ticket ticket) {
+    final forecasts =
+        [
+          ticket.priceForecastDiv,
+          ticket.priceForecastPE,
+          ticket.priceForecastFPE,
+          ticket.priceForecastEquity,
+          ticket.priceForecastDivBuyback,
+        ].where((value) => value != null && value! > 0).cast<double>().toList();
+
+    if (forecasts.isEmpty) return null;
+
+    return forecasts.reduce((a, b) => a + b) / forecasts.length;
+  }
+
+  double _calculateForecastAverageQuality(Ticket ticket) {
+    final qualityFields = [
+      'priceForecastDiv',
+      'priceForecastPE',
+      'priceForecastFPE',
+      'priceForecastEquity',
+      'priceForecastDivBuyback',
+    ];
+
+    final validQualities = <double>[];
+    for (final field in qualityFields) {
+      final quality = ticket.dataQuality[field];
+      final value = _getFieldValue(ticket, field);
+      if (quality != null && value != null && value > 0) {
+        validQualities.add(quality);
+      }
+    }
+
+    if (validQualities.isEmpty) return 1.0;
+
+    return validQualities.reduce((a, b) => a * b);
+  }
+
+  double? _getFieldValue(Ticket ticket, String fieldName) {
+    switch (fieldName) {
+      case 'priceForecastDiv':
+        return ticket.priceForecastDiv;
+      case 'priceForecastPE':
+        return ticket.priceForecastPE;
+      case 'priceForecastFPE':
+        return ticket.priceForecastFPE;
+      case 'priceForecastEquity':
+        return ticket.priceForecastEquity;
+      case 'priceForecastDivBuyback':
+        return ticket.priceForecastDivBuyback;
+      default:
+        return null;
+    }
+  }
+
+  void _updateTicketWithForecastAverageQuality(Ticket ticket) {
+    // Calculate and store the F.Avg quality in the ticket's dataQuality map
+    final avgQuality = _calculateForecastAverageQuality(ticket);
+    ticket.dataQuality['forecastAverage'] = avgQuality;
+
+    // Create a combined comment with all forecast comments
+    final forecastComments = <String>[];
+    final qualityFields = [
+      ('priceForecastDiv', 'F.DIV'),
+      ('priceForecastPE', 'F.PE'),
+      ('priceForecastFPE', 'F.FPE'),
+      ('priceForecastEquity', 'F.Eq'),
+      ('priceForecastDivBuyback', 'F.DivBB'),
+    ];
+
+    for (final (field, label) in qualityFields) {
+      final value = _getFieldValue(ticket, field);
+      final quality = ticket.dataQuality[field];
+      final comment = ticket.comments[field];
+      if (value != null && value > 0) {
+        var info = '$label: ${value.toStringAsFixed(0)}';
+        if (quality != null) {
+          info += ' (Q: ${(quality * 100).toStringAsFixed(0)}%)';
+        }
+        if (comment != null && comment.isNotEmpty) {
+          info += ' - $comment';
+        }
+        forecastComments.add(info);
+      }
+    }
+
+    final avgValue = _calculateForecastAverage(ticket);
+    var combinedComment =
+        'Average forecast: ${avgValue?.toStringAsFixed(0) ?? "N/A"}';
+    combinedComment += '\nQuality: ${(avgQuality * 100).toStringAsFixed(1)}%';
+    if (forecastComments.isNotEmpty) {
+      combinedComment += '\n\nComponents:\n${forecastComments.join('\n')}';
+    }
+
+    ticket.comments['forecastAverage'] = combinedComment;
   }
 }
 
