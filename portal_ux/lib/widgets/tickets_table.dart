@@ -23,10 +23,19 @@ class _TicketsTableState extends State<TicketsTable> {
   bool isAscending = true;
   String searchQuery = '';
   int loadedCount = 0;
+  String selectedCategory = 'stocks';
+
+  final List<Map<String, String>> categories = [
+    {'value': 'default', 'label': '� Default'},
+    {'value': 'nyse', 'label': '🏢 NYSE'},
+    {'value': 'eu', 'label': '🇪🇺 Europe'},
+    {'value': 'current', 'label': '⚡ Current'},
+  ];
 
   @override
   void initState() {
     super.initState();
+    selectedCategory = widget.category;
     _loadTicketsStream();
   }
 
@@ -38,7 +47,7 @@ class _TicketsTableState extends State<TicketsTable> {
       loadedCount = 0;
     });
 
-    TicketService.getTicketsStream(category: widget.category).listen(
+    TicketService.getTicketsStream(category: selectedCategory).listen(
       (ticketsList) {
         debugPrint('Stream update received: ${ticketsList.length} tickets');
         setState(() {
@@ -326,11 +335,45 @@ class _TicketsTableState extends State<TicketsTable> {
 
     return Column(
       children: [
-        // Search Bar
+        // Search Bar with Category Dropdown
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
+              // Category Dropdown
+              Container(
+                height: 48,
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[400]!),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButton<String>(
+                  value: selectedCategory,
+                  underline: SizedBox.shrink(),
+                  icon: Icon(Icons.arrow_drop_down, size: 20),
+                  style: TextStyle(fontSize: 12, color: Colors.black87),
+                  items:
+                      categories.map((category) {
+                        return DropdownMenuItem<String>(
+                          value: category['value'],
+                          child: Text(
+                            category['label']!,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        );
+                      }).toList(),
+                  onChanged: (value) {
+                    if (value != null && value != selectedCategory) {
+                      setState(() {
+                        selectedCategory = value;
+                      });
+                      _loadTicketsStream();
+                    }
+                  },
+                ),
+              ),
+              SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   decoration: InputDecoration(
