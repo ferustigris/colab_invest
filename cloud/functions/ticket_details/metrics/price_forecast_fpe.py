@@ -16,7 +16,7 @@ class PriceForecastFPE(FinancialMetric):
         # Use forward EPS and target P/E for forecast
         # =(8,5+2*(POWER(C2; 1/10)-1)*100)*E2/P2
         # (8.5 + 2 * (pow(growth, 1/10) - 1) * 100) * price * fpe
-        growth = stock_details.profit_growth_10_years.value + 1
+        growth = stock_details.profit_growth_10_years.value
         price = stock_details.current_price.value
         fpe = stock_details.fpe.value
 
