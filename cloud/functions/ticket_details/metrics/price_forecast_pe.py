@@ -25,7 +25,7 @@ class PriceForecastPE(FinancialMetric):
             self.comment += f"\n - Invalid growth ({growth:.2f}) or P/E ({pe:.2f}) value"
             return
 
-        self.value = (8.5 + 2 * (pow(growth, 1/10) - 1) * 100) * price / pe
+        self.value = (8.5 + 2 * growth * 100) * price / pe
 
         self.data_quality = stock_details.current_price.data_quality * stock_details.profit_growth_10_years.data_quality * stock_details.pe.data_quality
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"

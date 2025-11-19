@@ -7,6 +7,7 @@ resource "google_cloudfunctions_function" "ask_chat_function" {
   entry_point = "ask_chat"
 
   runtime = "python311"
+  timeout = 540
 
   source_archive_bucket = google_storage_bucket.src_bucket.name
   source_archive_object = google_storage_bucket_object.ask_chat_source.name
@@ -37,6 +38,7 @@ resource "google_cloudfunctions_function" "ask_finance_assistent_chat_function" 
   entry_point = "ask_finance_assistent_chat"
 
   runtime = "python311"
+  timeout = 540
 
   source_archive_bucket = google_storage_bucket.src_bucket.name
   source_archive_object = google_storage_bucket_object.ask_finance_assistent_chat_source.name
@@ -75,6 +77,7 @@ resource "google_cloudfunctions_function" "get_metric_function" {
   entry_point = "get_metric"
 
   runtime = "python311"
+  timeout = 540
 
   source_archive_bucket = google_storage_bucket.src_bucket.name
   source_archive_object = google_storage_bucket_object.get_metric_source.name
