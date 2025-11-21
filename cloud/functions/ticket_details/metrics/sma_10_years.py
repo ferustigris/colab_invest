@@ -15,9 +15,10 @@ class Sma10Years(FinancialMetric):
     def get_load_for_ticker(self, stock_details, yahoo_data):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
         
-        if not 'twoHundredDayAverage' in yahoo_data:
+        if not 'twoHundredDayAverage' in yahoo_data or yahoo_data['twoHundredDayAverage'] is None:
             print(f"twoHundredDayAverage data not available for {stock_details.ticker}")
             self.data_quality = 0.0
+            self.value = 0
             self.comment += "\n - twoHundredDayAverage data not available"
             return
 

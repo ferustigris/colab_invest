@@ -96,20 +96,20 @@ class StockDetails:
             "marketCap": serialize_value(self.market_cap),
             "revenue": serialize_value(self.revenue),
             "netIncome": serialize_value(self.net_income),
-            "ebitda": serialize_value(self.ebitda),
+            # "ebitda": serialize_value(self.ebitda),
             "nta": serialize_value(self.nta),
             "pe": serialize_value(self.pe),
             "fpe": serialize_value(self.fpe),
-            "ps": serialize_value(self.ps),
-            "evEbitda": serialize_value(self.ev_ebitda),
+            # "ps": serialize_value(self.ps),
+            # "evEbitda": serialize_value(self.ev_ebitda),
             "totalDebt": serialize_value(self.total_debt),
-            "debtEbitda": serialize_value(self.debt_ebitda),
+            # "debtEbitda": serialize_value(self.debt_ebitda),
             "cash": serialize_value(self.cash),
             "dividend": serialize_value(self.dividend),
             "freeCashFlow": serialize_value(self.free_cash_flow),
             "buyback": serialize_value(self.buyback),
             "buybackPercent": serialize_value(self.buyback_percent),
-            "freeCashFlowPerStock": serialize_value(self.free_cash_flow_per_stock)
+            # "freeCashFlowPerStock": serialize_value(self.free_cash_flow_per_stock)
         }
         
         print(f"Completed to_json() for ticker: {self.ticker}, result keys: {result}")

@@ -15,9 +15,10 @@ class SharesImplied(FinancialMetric):
     def get_load_for_ticker(self, stock_details, yahoo_data):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
 
-        if not 'impliedSharesOutstanding' in yahoo_data:
+        if not 'impliedSharesOutstanding' in yahoo_data or yahoo_data['impliedSharesOutstanding'] is None:
             print(f"impliedSharesOutstanding data not available for {stock_details.ticker}")
             self.data_quality = 0.0
+            self.value = 0
             self.comment += "\n - impliedSharesOutstanding data not available"
             return
 

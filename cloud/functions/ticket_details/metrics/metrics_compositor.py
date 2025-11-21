@@ -22,7 +22,7 @@ class MetricsCompositor(FinancialMetric):
             metric.get_load_for_ticker(stock_details, yahoo_data)
             print(f"Method {metric.name} completed with quality={metric.data_quality}, value={metric.value}")
 
-        valid_metrics = [metric for metric in self.methods if metric.data_quality > 0]
+        valid_metrics = [metric for metric in self.methods if metric.data_quality > 0 and metric.value is not None]
 
         self.data_quality = reduce(lambda x, y: x * y, [metric.data_quality for metric in valid_metrics], 1.0) * len(valid_metrics) / len(self.methods)
         print(f"Initial data quality (product): {self.data_quality}")
@@ -57,7 +57,8 @@ class MetricsCompositor(FinancialMetric):
         
         # Add details for each child metric
         for metric in self.methods:
-            self.comment += f"\n - {metric.name}: value={metric.value:.2f}, quality={metric.data_quality:.2f}"
+            value_str = f"{metric.value:.2f}" if metric.value is not None else "0.00"
+            self.comment += f"\n - {metric.name}: value={value_str}, quality={metric.data_quality:.2f}"
         self.last_update = yahoo_data['lastUpdate']
         print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
 
