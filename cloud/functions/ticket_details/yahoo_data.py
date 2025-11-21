@@ -110,6 +110,9 @@ class YahooData:
             
             # Dividends
             'fiveYearAvgDividendYield': data_dict.get('fiveYearAvgDividendYield'),
+            'dividendYield': data_dict.get('dividendYield'),
+            'trailingAnnualDividendYield': data_dict.get('trailingAnnualDividendYield'),
+            'forwardAnnualDividendYield': data_dict.get('forwardAnnualDividendYield'),
             
             # Shares
             'sharesOutstanding': data_dict.get('sharesOutstanding'),
@@ -179,7 +182,7 @@ class YahooData:
             'ebitda': data_dict.get('ebitda'),
             
             # Dividends
-            'fiveYearAvgDividendYield': data_dict.get('fiveYearAvgDividendYield'),
+            'dividendYield': data_dict.get('dividendYield'),
             
             # Shares
             'sharesOutstanding': data_dict.get('sharesOutstanding'),
@@ -187,6 +190,75 @@ class YahooData:
             
             # Book value
             'bookValue': data_dict.get('bookValue'),
+            
+            # Technical indicators
+            'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
+        }
+        
+        # Set only the required fields
+        for key, value in required_fields.items():
+            setattr(yahoo_data, key, value)
+        
+        return yahoo_data
+
+
+
+    @classmethod
+    def from_bb_fmp_dict(cls, data_dict, last_update=None):
+        """Create YahooData from FMP dictionary with only required fields
+        
+        Args:
+            data_dict: Dictionary with yahoo data fields
+            last_update: Optional lastUpdate timestamp, if not provided will try to get from data_dict
+                        If still not found, will use current timestamp
+        """
+        from datetime import datetime
+        
+        yahoo_data = cls()
+        
+        # Determine lastUpdate value
+        if last_update is None:
+            last_update = data_dict.get('lastUpdate')
+        if last_update is None:
+            # Use current timestamp if still not provided
+            last_update = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        # Required fields mapping - only fields actually used by metrics
+        required_fields = {
+            # Timestamp - always set to ensure it's not None
+            'lastUpdate': last_update,
+            
+            # Company info
+            'longName': data_dict.get('longName'),
+            
+            # Price and market data
+            'currentPrice': data_dict.get('last_price'),
+            'marketCap': data_dict.get('market_cap'),
+            
+            # Revenue and income
+            'totalRevenue': data_dict.get('revenue'),
+            'netIncomeToCommon': data_dict.get('consolidated_net_income'),
+            
+            # Valuation metrics
+            'trailingPE': data_dict.get('pe_ratio'),
+            'forwardPE': data_dict.get('forward_pe'),
+            
+            # Financial health
+            'totalDebt': data_dict.get('net_debt_to_ebitda') * data_dict.get('ebitda') if data_dict.get('net_debt_to_ebitda') and data_dict.get('ebitda') else None,
+            'totalCash': data_dict.get('cash_per_share') * data_dict.get('weighted_average_basic_shares_outstanding') if data_dict.get('cash_per_share') and data_dict.get('weighted_average_basic_shares_outstanding') else None,
+            'freeCashflow': data_dict.get('free_cash_flow_yield') * data_dict.get('market_cap') if data_dict.get('free_cash_flow_yield') and data_dict.get('market_cap') else None,
+            'ebitda': data_dict.get('ebitda'),
+            
+            # Dividends
+            'dividendYield': data_dict.get('dividend_yield'),
+            'fiveYearAvgDividendYield': data_dict.get('dividend_yield_5y_avg'),
+            
+            # Shares
+            'sharesOutstanding': data_dict.get('weighted_average_basic_shares_outstanding'),
+            'impliedSharesOutstanding': data_dict.get('weighted_average_diluted_shares_outstanding'),
+            
+            # Book value
+            'bookValue': data_dict.get('tangible_asset_value') / data_dict.get('weighted_average_basic_shares_outstanding'),
             
             # Technical indicators
             'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),

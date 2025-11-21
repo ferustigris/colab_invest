@@ -44,17 +44,26 @@ def _get_stock_details(ticker, yahoo_data):
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
-    # with open('yahoo_func_apple.json', 'r') as f:
+    # with open('func_yahoo_apple.json', 'r') as f:
     #     yahoo_json_data = json.load(f)["yahoo_data"]
     # stock_details_original = _get_stock_details("AAPL", yahoo_json_data)
-    # # print(json.dumps(stock_details_original.to_json(), indent=2))
 
     # with open('stock_details_apple.json', 'w') as f:
     #     f.write(json.dumps(stock_details_original.to_json(), indent=2))
 
-    with open('yahoo_func_apple.json', 'r') as f:
-        yahoo_reference_data = YahooData.from_yahoo_dict(json.load(f)["yahoo_data"])
-    stock_details = _get_stock_details("AAPL", yahoo_reference_data)
+    # Test loading from Yahoo dict
+    # with open('func_yahoo_apple.json', 'r') as f:
+    #     yahoo_data = YahooData.from_yahoo_dict(json.load(f)["yahoo_data"])
+
+    # Test loading from BB Yahoo dict
+    # with open('func_bb_yahoo_apple.json', 'r') as f:
+    #     yahoo_data = YahooData.from_bb_yahoo_dict(json.load(f)["yahoo_data"])
+
+    # Test loading from BB fmp dict
+    with open('func_bb_fmp_apple.json', 'r') as f:
+        fmp_data = YahooData.from_bb_fmp_dict(json.load(f)["fmp_data"])
+
+    stock_details = _get_stock_details("AAPL", fmp_data)
 
     with open('stock_details_apple.json', 'r') as f:
         reference = json.load(f)

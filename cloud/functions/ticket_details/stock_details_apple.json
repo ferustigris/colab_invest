@@ -1,7 +1,7 @@
 {
   "ticker": "AAPL",
   "currency": "USD",
-  "name": "American Airlines Group Inc.",
+  "name": "Apple Inc.",
   "summary": "Summary about company AAPL",
   "profitGrowth10Years": {
     "name": "profitAvgAnnualGrowthForLast10Years",
@@ -12,129 +12,129 @@
   },
   "currentPrice": {
     "name": "currentPrice",
-    "value": 13.4077,
-    "comment": "Real-time market price as of latest trading session\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.10",
-    "dataQuality": 0.1,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 270.74,
+    "comment": "Real-time market price as of latest trading session\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 0.33",
+    "dataQuality": 0.3333333333333333,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "shares": {
     "name": "Shares",
-    "value": 660086465.4893084,
-    "comment": "Total number of shares outstanding from various sources\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.12\n - max Shares among methods: 660086495.00, min Shares among methods: 660086406.47\n - amount of valid methods used: 3\n - sharesImplied: value=660086495.00, quality=0.50\n - sharesImplied: value=660086406.47, quality=0.50\n - sharesOutstanding: value=660086495.00, quality=0.50",
-    "dataQuality": 0.12499998323475872,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 14819043922.814016,
+    "comment": "Total number of shares outstanding from various sources\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 0.07\n - max Shares among methods: 14840390000.00, min Shares among methods: 1000000000.00\n - amount of valid methods used: 3\n - sharesImplied: value=14840390000.00, quality=1.00\n - sharesImplied: value=14840388768.44, quality=1.00\n - sharesOutstanding: value=14776353000.00, quality=1.00",
+    "dataQuality": 0.0673836738791905,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "sma10Years": {
     "name": "sma10Years",
-    "value": 12.22515,
-    "comment": "10-year simple moving average indicating long-term trend\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
-    "dataQuality": 0.5,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 225.73026,
+    "comment": "10-year simple moving average indicating long-term trend\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
+    "dataQuality": 1.0,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "priceForecastDiv": {
     "name": "priceForecastDiv",
-    "value": 4.479615706153837,
-    "comment": "Price forecast based on dividend discount model\n - current data quality: 0.01",
-    "dataQuality": 0.0125,
+    "value": 30.897454666137165,
+    "comment": "Price forecast based on dividend discount model\n - current data quality: 0.18",
+    "dataQuality": 0.17990280188679245,
     "lastUpdate": "1970-01-01T00:00:00Z"
   },
   "priceForecastDivBuyback": {
     "name": "priceForecastDivBuyback",
-    "value": 1200.1271717361465,
-    "comment": "Price forecast based on dividend discount model with buyback consideration\n - price: 13.41, dividend: 0.01, buyback: 3.39\n - current data quality: 0.00",
-    "dataQuality": 0.00014062498113910358,
+    "value": 84.15532834149226,
+    "comment": "Price forecast based on dividend discount model with buyback consideration\n - price: 270.74, dividend: 0.00, buyback: 0.01\n - current data quality: 0.00",
+    "dataQuality": 0.003636753519687672,
     "lastUpdate": "1970-01-01T00:00:00Z"
   },
   "priceForecastPE": {
     "name": "priceForecastPE",
-    "value": 57.55263775186181,
-    "comment": "Price forecast based on P/E ratio analysis\n - current data quality: 0.00",
-    "dataQuality": 0.00204397478734389,
+    "value": 662.8585680754908,
+    "comment": "Price forecast based on P/E ratio analysis\n - current data quality: 0.01",
+    "dataQuality": 0.008266233332345977,
     "lastUpdate": "1970-01-01T00:00:00Z"
   },
   "priceForecastFPE": {
     "name": "priceForecastFPE",
-    "value": 97.16200362336582,
-    "comment": "Price forecast based on Forward P/E ratio analysis\n - current data quality: 0.01",
-    "dataQuality": 0.009000000000000001,
+    "value": 399.71104990113577,
+    "comment": "Price forecast based on Forward P/E ratio analysis\n - current data quality: 0.10",
+    "dataQuality": 0.09999999999999999,
     "lastUpdate": "1970-01-01T00:00:00Z"
   },
   "priceForecastEquity": {
     "name": "priceForecastEquity",
-    "value": -6.002000268333287,
-    "comment": "Price forecast based on equity valuation model\n - current data quality: 0.06",
-    "dataQuality": 0.06249999161737936,
+    "value": 4.976621852740666,
+    "comment": "Price forecast based on equity valuation model\n - current data quality: 0.07",
+    "dataQuality": 0.0673836738791905,
     "lastUpdate": "1970-01-01T00:00:00Z"
   },
   "marketCap": {
     "name": "marketCap",
-    "value": 8850240512,
+    "value": 4017886855168,
     "comment": "Total market capitalization based on current share price",
     "dataQuality": 0.6,
-    "lastUpdate": 1763735440
+    "lastUpdate": 1763758258
   },
   "revenue": {
     "name": "revenue",
-    "value": 54293999616,
-    "comment": "Total revenue for the last twelve months\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
-    "dataQuality": 0.5,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 416161005568,
+    "comment": "Total revenue for the last twelve months\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
+    "dataQuality": 1.0,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "netIncome": {
     "name": "netIncome",
-    "value": 602000000,
-    "comment": "Net income after all expenses and taxes\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
-    "dataQuality": 0.5,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 112010002432,
+    "comment": "Net income after all expenses and taxes\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
+    "dataQuality": 1.0,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "nta": {
     "name": "nta",
-    "value": -3961839142.99,
-    "comment": "Net tangible assets value\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
-    "dataQuality": 0.5,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 73748777823.0,
+    "comment": "Net tangible assets value\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
+    "dataQuality": 1.0,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "pe": {
     "name": "pe",
-    "value": 11.2055745,
-    "comment": "Price-to-earnings ratio based on trailing twelve months\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.02\n - max pe among methods: 15.41, min pe among methods: 7.00\n - amount of valid methods used: 2\n - pe: value=7.00, quality=0.10\n - pe: value=15.41, quality=0.50",
-    "dataQuality": 0.022710830970487664,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 19.6461125,
+    "comment": "Price-to-earnings ratio based on trailing twelve months\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 0.03\n - max pe among methods: 36.29, min pe among methods: 3.00\n - amount of valid methods used: 2\n - pe: value=3.00, quality=0.33\n - pe: value=36.29, quality=1.00",
+    "dataQuality": 0.027554111107819926,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "fpe": {
     "name": "fpe",
-    "value": 6.637475,
-    "comment": "Forward price-to-earnings ratio based on next year estimates\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.10",
-    "dataQuality": 0.1,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 32.58002,
+    "comment": "Forward price-to-earnings ratio based on next year estimates\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 0.33",
+    "dataQuality": 0.3333333333333333,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "totalDebt": {
     "name": "totalDebt",
-    "value": 36064002048,
-    "comment": "Total debt including short-term and long-term obligations\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
-    "dataQuality": 0.5,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 112377004032,
+    "comment": "Total debt including short-term and long-term obligations\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
+    "dataQuality": 1.0,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "cash": {
     "name": "cash",
-    "value": 7386999808,
-    "comment": "Cash and cash equivalents on balance sheet\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
-    "dataQuality": 0.5,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 54697000960,
+    "comment": "Cash and cash equivalents on balance sheet\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
+    "dataQuality": 1.0,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "dividend": {
     "name": "dividend",
-    "value": 0.0127,
-    "comment": "Dividend-related metrics\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.12\n - max dividend among methods: 0.01, min dividend among methods: 0.01\n - amount of valid methods used: 1\n - dividendYield: value=0.00, quality=0.00\n - trailingAnnualDividendYield: value=0.00, quality=0.00\n - fiveYearAvgDividendYield: value=0.01, quality=0.50\n - forwardAnnualDividendYield: value=0.00, quality=0.00",
-    "dataQuality": 0.125,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "value": 0.0043379798,
+    "comment": "Dividend-related metrics\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 0.54\n - max dividend among methods: 0.01, min dividend among methods: 0.00\n - amount of valid methods used: 3\n - dividendYield: value=0.00, quality=1.00\n - trailingAnnualDividendYield: value=0.00, quality=1.00\n - fiveYearAvgDividendYield: value=0.01, quality=1.00\n - forwardAnnualDividendYield: value=0.00, quality=0.00",
+    "dataQuality": 0.5397084056603774,
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "freeCashFlow": {
     "name": "freeCashFlow",
-    "value": 422500000,
-    "comment": "Free cash flow available after capital expenditures\n - last update on 2025-11-12T14:53:50Z\n - current data quality: 0.50",
+    "value": 78862254080,
+    "comment": "Free cash flow available after capital expenditures\n - last update on 2025-11-19T15:55:38Z\n - current data quality: 1.00",
     "dataQuality": 0.8,
-    "lastUpdate": "2025-11-12T14:53:50Z"
+    "lastUpdate": "2025-11-19T15:55:38Z"
   },
   "buyback": {
     "name": "AnnualAvgBuybackInUsd",
@@ -145,9 +145,9 @@
   },
   "buybackPercent": {
     "name": "buybackPercent",
-    "value": 3.389738084166687,
-    "comment": "Percentage of shares bought back relative to capitalization\n - current data quality: 0.01",
-    "dataQuality": 0.011249998491128286,
+    "value": 0.007477366103164704,
+    "comment": "Percentage of shares bought back relative to capitalization\n - current data quality: 0.02",
+    "dataQuality": 0.020215102163757152,
     "lastUpdate": "1970-01-01T00:00:00Z"
   }
 }
