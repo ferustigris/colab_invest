@@ -1,4 +1,5 @@
 # Import all metric classes from individual files
+from yahoo_data import YahooData
 from metrics.profit_growth_10_years import ProfitGrowth10Years
 from metrics.current_price import CurrentPrice
 from metrics.shares import Shares
@@ -25,51 +26,55 @@ from metrics.free_cash_flow import FreeCashFlow
 from metrics.buyback import Buyback
 from metrics.buyback_percent import BuybackPercent
 from metrics.free_cash_flow_per_stock import FreeCashFlowPerStock
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class StockDetails:
-    def __init__(self, ticker):
+    def __init__(self, ticker: str, data: YahooData):
+        self.data = data
         self.ticker = ticker
         self.name = f"Company {ticker}"
         self.summary = f"Summary about company {ticker}"
         self.currency = "USD"
         # Financial metrics with initialized default values
-        self.profit_growth_10_years = ProfitGrowth10Years()
-        self.current_price = CurrentPrice()
-        self.shares = Shares()
-        self.sma_10_years = Sma10Years()
-        self.market_cap = MarketCap()
-        self.revenue = Revenue()
-        self.net_income = NetIncome()
-        self.ebitda = Ebitda()
-        self.nta = Nta()
-        self.pe = Pe()
-        self.fpe = Fpe()
-        self.ps = Ps()
-        self.ev_ebitda = EvEbitda()
-        self.total_debt = TotalDebt()
-        self.debt_ebitda = DebtEbitda()
-        self.cash = Cash()
-        self.dividend = Dividend()
-        self.free_cash_flow = FreeCashFlow()
-        self.buyback = Buyback()
-        self.buyback_percent = BuybackPercent()
-        self.free_cash_flow_per_stock = FreeCashFlowPerStock()
+        self.profit_growth_10_years = ProfitGrowth10Years(self, data)
+        self.current_price = CurrentPrice(self, data)
+        self.shares = Shares(self, data)
+        self.sma_10_years = Sma10Years(self, data)
+        self.market_cap = MarketCap(self, data)
+        self.revenue = Revenue(self, data)
+        self.net_income = NetIncome(self, data)
+        self.ebitda = Ebitda(self, data)
+        self.nta = Nta(self, data)
+        self.pe = Pe(self, data)
+        self.fpe = Fpe(self, data)
+        self.ps = Ps(self, data)
+        self.ev_ebitda = EvEbitda(self, data)
+        self.total_debt = TotalDebt(self, data)
+        self.debt_ebitda = DebtEbitda(self, data)
+        self.cash = Cash(self, data)
+        self.dividend = Dividend(self, data)
+        self.free_cash_flow = FreeCashFlow(self, data)
+        self.buyback = Buyback(self, data)
+        self.buyback_percent = BuybackPercent(self, data)
+        self.free_cash_flow_per_stock = FreeCashFlowPerStock(self, data)
         # Computed price forecasts
-        self.price_forecast_div = PriceForecastDiv()
-        self.price_forecast_div_buyback = PriceForecastDivBuyback()
-        self.price_forecast_pe = PriceForecastPE()
-        self.price_forecast_fpe = PriceForecastFPE()
-        self.price_forecast_equity = PriceForecastEquity()
+        self.price_forecast_div = PriceForecastDiv(self, data)
+        self.price_forecast_div_buyback = PriceForecastDivBuyback(self, data)
+        self.price_forecast_pe = PriceForecastPE(self, data)
+        self.price_forecast_fpe = PriceForecastFPE(self, data)
+        self.price_forecast_equity = PriceForecastEquity(self, data)
 
     def to_json(self):
-        print(f"Starting to_json() for ticker: {self.ticker}")
+        logger.debug(f"Starting to_json() for ticker: {self.ticker}")
         
         def serialize_value(obj):
             """Helper function to handle complex numbers and other non-serializable objects"""
             # print(f"Serializing object of type: {type(obj).__name__}")
             if isinstance(obj, complex):
-                print(f"Found complex number: {str(obj)}, converting to string")
+                logger.debug(f"Found complex number: {str(obj)}, converting to string")
                 return str(obj)
             elif hasattr(obj, 'to_json'):
                 # print(f"Object has to_json method, calling it")
@@ -78,7 +83,7 @@ class StockDetails:
             else:
                 return obj
         
-        print("Building JSON dictionary...")
+        logger.debug("Building JSON dictionary...")
         result = {
             "ticker": self.ticker,
             "currency": self.currency,
@@ -112,18 +117,18 @@ class StockDetails:
             # "freeCashFlowPerStock": serialize_value(self.free_cash_flow_per_stock)
         }
         
-        print(f"Completed to_json() for ticker: {self.ticker}, result keys: {result}")
+        logger.info(f"Completed to_json() for ticker: {self.ticker}, result keys: {result}")
         return result
     
-    def update_from_yahoo_data(self, yahoo_data):
+    def update_from_yahoo_data(self):
         """
         Update financial metrics from Yahoo data
         """
-        print(f"Updating StockDetails for ticker: {self.ticker} from Yahoo data")
+        logger.debug(f"Updating StockDetails for ticker: {self.ticker} from Yahoo data")
         import requests
-        
-        self.name = yahoo_data.get("longName", self.name)
-        self.currency = yahoo_data.get("currency", "USD")
+
+        self.name = self.data.get("longName", self.name)
+        self.currency = self.data.get("currency", "USD")
         
         # Create array of all metric objects
         metrics = [
@@ -152,10 +157,10 @@ class StockDetails:
         # Process all basic metrics
         for metric in metrics:
             try:
-                metric.get_load_for_ticker(self, yahoo_data)
+                metric.get_load_for_ticker()
                 # print(f"Successfully loaded metric: {metric.__class__.__name__}")
             except (requests.exceptions.HTTPError, ValueError, TypeError) as e:
-                print(f"Error loading metric {metric.__class__.__name__}: {e}")
+                logger.error(f"Error loading metric {metric.__class__.__name__}: {e}")
                 continue
         
         # Process computed price forecasts (these depend on previously loaded metrics)
@@ -171,9 +176,9 @@ class StockDetails:
         
         for metric in forecast_metrics:
             try:
-                metric.get_load_for_ticker(self, yahoo_data)
+                metric.get_load_for_ticker()
                 # print(f"Successfully loaded forecast metric: {metric.__class__.__name__}")
             except (requests.exceptions.HTTPError, ValueError, TypeError) as e:
-                print(f"Error loading forecast metric {metric.__class__.__name__}: {e}")
+                logger.warning(f"Error loading forecast metric {metric.__class__.__name__}: {e}")
                 continue
         

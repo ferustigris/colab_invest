@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 class YahooData:
     """Data class for Yahoo Finance compatible data structure - only fields used by metrics"""
     
@@ -108,12 +111,22 @@ class YahooData:
         return {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
     
     @classmethod
-    def from_dict(cls, data_dict):
+    def from_dict(cls, data_dict, provider=None):
         """Create YahooData from dictionary"""
-        yahoo_data = cls()
-        for key, value in data_dict.items():
-            if hasattr(yahoo_data, key):
-                setattr(yahoo_data, key, value)
+        match provider:
+            case 'yfinance':
+                yahoo_data = cls.from_yahoo_dict(data_dict)
+            case 'bb_yfinance':
+                yahoo_data = cls.from_bb_yahoo_dict(data_dict)
+            case 'bb_fmp':
+                yahoo_data = cls.from_bb_fmp_dict(data_dict)
+            case 'bb_finviz':
+                yahoo_data = cls.from_bb_finviz_dict(data_dict)
+            case _:
+                yahoo_data = cls()
+                for key, value in data_dict.items():
+                    if hasattr(yahoo_data, key):
+                        setattr(yahoo_data, key, value)
         return yahoo_data
     
     @classmethod
@@ -176,7 +189,6 @@ class YahooData:
             setattr(yahoo_data, key, value)
         
         return yahoo_data
-
 
 
     @classmethod
@@ -303,7 +315,7 @@ class YahooData:
             'impliedSharesOutstanding': data_dict.get('weighted_average_diluted_shares_outstanding'),
             
             # Book value
-            'bookValue': data_dict.get('tangible_asset_value') / data_dict.get('weighted_average_basic_shares_outstanding'),
+            'bookValue': data_dict.get('tangible_asset_value') / data_dict.get('weighted_average_basic_shares_outstanding') if data_dict.get('tangible_asset_value') and data_dict.get('weighted_average_basic_shares_outstanding') else None,
             
             # Technical indicators
             'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),

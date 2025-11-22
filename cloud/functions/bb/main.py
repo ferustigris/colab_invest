@@ -8,6 +8,9 @@ from datetime import datetime, timedelta
 import requests
 from urllib.parse import urlparse
 from openbb import obb
+import logging
+
+logger = logging.getLogger(__name__)
 
 def is_valid_cache(data_last_update, data, cache_hours=24):
     """
@@ -38,23 +41,23 @@ def is_valid_cache(data_last_update, data, cache_hours=24):
 @exception_logger(exception_class=requests.exceptions.RequestException, log_message="Request error in bb function")
 @exception_logger(exception_class=requests.exceptions.HTTPError, log_message="HTTP error in bb function")
 def bb(request, user):
-    print("BB function called")
+    logger.debug("BB function called")
     historizer_url = os.environ.get("HISTORIZER_URL")
 
     now = datetime.now()
     now_timestamp = datetime.strftime(now, "%Y-%m-%dT%H:%M:%SZ")
 
-    print(f"bb called for user {user['uid']} at {now_timestamp}")
+    logger.info(f"bb called for user {user['uid']} at {now_timestamp}")
 
     path = urlparse(request.url).path
-    print(f"this is the path: {path}, request.url: {request.url}")
+    logger.debug(f"this is the path: {path}, request.url: {request.url}")
     provider = os.path.basename(path)
     ticker = os.path.basename(os.path.dirname(path))
 
-    print(f"this is the ticker: {ticker}, provider: {provider}")
+    logger.info(f"this is the ticker: {ticker}, provider: {provider}")
 
     blob_name = f"bb_{ticker}_{provider}_data.json"
-    print(f"blob_name: {blob_name}")
+    logger.debug(f"blob_name: {blob_name}")
     response = requests.get(f"{historizer_url}/{blob_name}", headers=request.headers)
     response.raise_for_status()
     data = response.json().get(f"{provider}_data", {})   
@@ -63,18 +66,18 @@ def bb(request, user):
     result['lastUpdate'] = data_last_update
 
     if not is_valid_cache(data_last_update, data):
-        print(f"Cache invalid or expired, fetching fresh data for ticker {ticker}")
+        logger.info(f"Cache invalid or expired, fetching fresh data for ticker {ticker}")
         
         result = _bb_yfinance_metrics_response(provider, ticker) | _bb_yfinance_profile_response(provider, ticker)
-        print(f"Ticker info: {result}")
+        logger.debug(f"Ticker info: {result}")
 
         response = requests.post(f"{historizer_url}/{blob_name}", headers=request.headers, json={
             f"{provider}_data": result, "lastUpdate": now_timestamp})
         response.raise_for_status()
 
         result['lastUpdate'] = now_timestamp
-
-    print(f"Using cached data for ticker {ticker}")
+    else:
+        logger.info(f"Using cached data for ticker {ticker}")
     return result
 
 def _setup_fmp_credentials():
@@ -83,26 +86,26 @@ def _setup_fmp_credentials():
 
     if fmp_api_key:
         obb.user.credentials.fmp_api_key = fmp_api_key
-        print(f"FMP API key set from environment")
+        logger.debug(f"FMP API key set from environment")
     else:
-        print("No FMP_API_KEY in environment, will try without authentication")
+        logger.warning("No FMP_API_KEY in environment, will try without authentication")
 
 def _bb_yfinance_profile_response(provider, symbol):
-    print(f"\nFetching data from OpenBB for provider: {provider}, symbol: {symbol}")  
+    logger.info(f"Fetching data from OpenBB for provider: {provider}, symbol: {symbol}")  
     _setup_fmp_credentials()
-    print("OpenBB imported successfully")
+    logger.debug("OpenBB imported successfully")
     
     # Get historical price data
-    print("\nTrying to get historical price data...")
+    logger.debug("Trying to get historical price data...")
     try:
         profile_data = obb.equity.profile(
             symbol=symbol,
             provider=provider
         )
-        print("Price data fetched successfully!")
+        logger.debug("Price data fetched successfully!")
         
         if not profile_data.results:
-            print(f"No profile data returned for {symbol}")
+            logger.warning(f"No profile data returned for {symbol}")
             return {}
         
         # Save data to JSON
@@ -114,24 +117,26 @@ def _bb_yfinance_profile_response(provider, symbol):
         
         return reduce(lambda x, y: x | y, results, {})
     except Exception as e:
-        print(f"Error fetching profile data: {e}")
+        logger.warning(f"Error fetching profile data: {e}")
         return {}
-    
+
 def _bb_yfinance_metrics_response(provider, symbol):
-    print(f"\nFetching data from OpenBB for provider: {provider}, symbol: {symbol}")
+    logger.info(f"Fetching data from OpenBB for provider: {provider}, symbol: {symbol}")
     _setup_fmp_credentials()
 
     # Get fundamental metrics (P/E, etc.)
-    print("\nTrying to get fundamental metrics...")
+    logger.debug("Trying to get fundamental metrics...")
     try:
         metrics_data = obb.equity.fundamental.metrics(
             symbol=symbol,
             provider=provider
         )
-        print("Metrics data fetched successfully!")
-        
+        logger.info("Metrics data fetched successfully!")
         if not metrics_data.results:
-            print(f"No metrics data returned for {symbol}")
+            logger.warning(f"No metrics data returned for {symbol}")
+            return {}
+        if not metrics_data.results:
+            logger.warning(f"No metrics data returned for {symbol}")
             return {}
         
         # Save data to JSON
@@ -143,5 +148,5 @@ def _bb_yfinance_metrics_response(provider, symbol):
         
         return reduce(lambda x, y: x | y, results, {})
     except Exception as e:
-        print(f"Error fetching metrics data: {e}")
+        logger.warning(f"Error fetching metrics data: {e}")
         return {}
