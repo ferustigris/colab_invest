@@ -20,6 +20,12 @@ class PriceForecastDivBuyback(FinancialMetric):
         buyback_percent = stock_details.buyback_percent.value
 
         print(f"Calculating {self.name} with price={price}, dividend={div}, buyback_percent={buyback_percent}")
+        
+        if price is None or div is None or buyback_percent is None:
+            self.value = 0
+            self.data_quality = 0.0
+            self.comment += f"\n - Invalid price ({price}), dividend ({div}), or buyback_percent ({buyback_percent}) value"
+            return
             
         self.value = 2.0/3 * price * (div + buyback_percent) / (1 - 1/(1 + 0.026))
 

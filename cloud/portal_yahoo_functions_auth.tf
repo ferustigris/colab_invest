@@ -25,6 +25,20 @@ resource "google_cloudfunctions_function_iam_member" "yahoo_function_invoker_per
   member = "allUsers"
 }
 
+resource "google_cloud_run_service_iam_member" "bb_invoker" {
+  project  = google_cloudfunctions2_function.bb_function.project
+  location = google_cloudfunctions2_function.bb_function.location
+  service  = google_cloudfunctions2_function.bb_function.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+resource "google_secret_manager_secret_iam_member" "allow_bb_function_access" {
+  secret_id = "fmp-api-key" # Created manually
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_cloudfunctions2_function.bb_function.service_config[0].service_account_email}"
+}
+
 resource "google_cloudfunctions_function_iam_member" "history_function_invoker_permission" {
   project        = google_cloudfunctions_function.history_function.project
   region         = google_cloudfunctions_function.history_function.region

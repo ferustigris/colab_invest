@@ -59,6 +59,15 @@ echo -n "your_secret_api_key" | gcloud secrets create chatgpt-api-key \
   --data-file=- \
   --replication-policy=automatic
 ```
+## bb
+
+You have to provide manually API key:
+
+```bash
+echo -n "your_secret_api_key" | gcloud secrets create fmp-api-key \
+  --data-file=- \
+  --replication-policy=automatic
+```
 
 ## colab utils (library)
 

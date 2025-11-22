@@ -3,6 +3,11 @@ resource "google_project_service" "cloud_functions" {
   service = "cloudfunctions.googleapis.com"
 }
 
+resource "google_project_service" "cloud_run" {
+  project = var.project
+  service = "run.googleapis.com"
+}
+
 resource "google_project_service" "artifact_registry" {
   project = var.project
   service = "artifactregistry.googleapis.com"

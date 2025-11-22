@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "yahoo"
+name = "bb"
 version = "0.1.0"
 description = ""
 authors = ["Andrey Kuznetsov <andrey_kuznetsov@epam.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 flask = "^2.0.1"
 flask_cors = "^5.0.1"
 google-cloud-storage = "^2.1.0"
@@ -15,7 +15,8 @@ google-cloud-secret-manager = "^2.23.3"
 requests = "^2.31.0"
 colab-utils = { version = "^0.0.11", source = "gcp" }
 pytest = "^7.4.0"
-yfinance = "^0.2.66"
+openbb = "4.3.3"
+openbb-finviz = "^1.4.0"
 
 [tool.poetry.dev-dependencies]
 

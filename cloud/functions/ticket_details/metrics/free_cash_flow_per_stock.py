@@ -15,8 +15,11 @@ class FreeCashFlowPerStock(FinancialMetric):
         import time
         print(f"Loading data for free cash flow per stock metric for ticker {stock_details.ticker}")
         # Calculate FCF per share
-        if 'freeCashflow' in yahoo_data and 'sharesOutstanding' in yahoo_data and yahoo_data['sharesOutstanding'] > 0:
-            self.value = yahoo_data['freeCashflow'] / yahoo_data['sharesOutstanding']
+        free_cashflow = yahoo_data.get('freeCashflow')
+        shares_outstanding = yahoo_data.get('sharesOutstanding')
+        
+        if free_cashflow is not None and shares_outstanding is not None and shares_outstanding > 0:
+            self.value = free_cashflow / shares_outstanding
             self.data_quality = 0.6  # Good quality calculated metric
             self.last_update = int(time.time())
             print(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")

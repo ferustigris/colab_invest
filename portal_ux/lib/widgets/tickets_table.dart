@@ -147,28 +147,58 @@ class _TicketsTableState extends State<TicketsTable> {
             bValue = b.nta ?? 0;
             break;
           case 10: // Forecast DIV
-            aValue = a.currentPrice! / (a.priceForecastDiv ?? 1);
-            bValue = b.currentPrice! / (b.priceForecastDiv ?? 1);
+            aValue =
+                (a.currentPrice != null && a.priceForecastDiv != null)
+                    ? a.currentPrice! / a.priceForecastDiv!
+                    : 0;
+            bValue =
+                (b.currentPrice != null && b.priceForecastDiv != null)
+                    ? b.currentPrice! / b.priceForecastDiv!
+                    : 0;
             break;
           case 11: // Forecast PE
-            aValue = a.currentPrice! / (a.priceForecastPE ?? 1);
-            bValue = b.currentPrice! / (b.priceForecastPE ?? 1);
+            aValue =
+                (a.currentPrice != null && a.priceForecastPE != null)
+                    ? a.currentPrice! / a.priceForecastPE!
+                    : 0;
+            bValue =
+                (b.currentPrice != null && b.priceForecastPE != null)
+                    ? b.currentPrice! / b.priceForecastPE!
+                    : 0;
             break;
           case 12: // Forecast FPE
-            aValue = a.currentPrice! / (a.priceForecastFPE ?? 1);
-            bValue = b.currentPrice! / (b.priceForecastFPE ?? 1);
+            aValue =
+                (a.currentPrice != null && a.priceForecastFPE != null)
+                    ? a.currentPrice! / a.priceForecastFPE!
+                    : 0;
+            bValue =
+                (b.currentPrice != null && b.priceForecastFPE != null)
+                    ? b.currentPrice! / b.priceForecastFPE!
+                    : 0;
             break;
           case 13: // Forecast Equity
-            aValue = a.currentPrice! / (a.priceForecastEquity ?? 1);
-            bValue = b.currentPrice! / (b.priceForecastEquity ?? 1);
+            aValue =
+                (a.currentPrice != null && a.priceForecastEquity != null)
+                    ? a.currentPrice! / a.priceForecastEquity!
+                    : 0;
+            bValue =
+                (b.currentPrice != null && b.priceForecastEquity != null)
+                    ? b.currentPrice! / b.priceForecastEquity!
+                    : 0;
             break;
           case 14: // Forecast DivBuyback
-            aValue = a.currentPrice! / (a.priceForecastDivBuyback ?? 1);
-            bValue = b.currentPrice! / (b.priceForecastDivBuyback ?? 1);
+            aValue =
+                (a.currentPrice != null && a.priceForecastDivBuyback != null)
+                    ? a.currentPrice! / a.priceForecastDivBuyback!
+                    : 0;
+            bValue =
+                (b.currentPrice != null && b.priceForecastDivBuyback != null)
+                    ? b.currentPrice! / b.priceForecastDivBuyback!
+                    : 0;
             break;
           case 15: // Forecast Average
-            aValue = _calculateForecastAverage(a);
-            bValue = _calculateForecastAverage(b);
+            aValue = _calculateForecastAverage(a) ?? 0;
+            bValue = _calculateForecastAverage(b) ?? 0;
             break;
           case 16: // P/E
             aValue = a.pe ?? 0;
@@ -229,6 +259,7 @@ class _TicketsTableState extends State<TicketsTable> {
   }
 
   Color _getProfitGrowthBorderColor(Ticket ticket) {
+    if (ticket.profitGrowth10Years == null) return Colors.grey;
     final growth = ticket.profitGrowth10Years! * 100;
     // Otherwise use standard logic
     return _getProfitGrowthColor(growth);
@@ -746,7 +777,7 @@ class _TicketsTableState extends State<TicketsTable> {
                               ),
                               decoration: BoxDecoration(
                                 color: _getProfitGrowthColor(
-                                  ticket.profitGrowth10Years! * 100,
+                                  (ticket.profitGrowth10Years ?? 0) * 100,
                                 ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
@@ -756,13 +787,13 @@ class _TicketsTableState extends State<TicketsTable> {
                               ),
                               child: Text(
                                 _formatNumber(
-                                  ticket.profitGrowth10Years! * 100,
+                                  (ticket.profitGrowth10Years ?? 0) * 100,
                                   decimals: 0,
                                   suffix: '%',
                                 ),
                                 style: TextStyle(
                                   color: _getProfitGrowthColor(
-                                    ticket.profitGrowth10Years! * 100,
+                                    (ticket.profitGrowth10Years ?? 0) * 100,
                                   ),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 10,
@@ -799,7 +830,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.shares! / 1000_000_000,
+                                (ticket.shares ?? 0) / 1000_000_000,
                                 decimals: 2,
                                 postfix: 'B',
                               ),
@@ -814,7 +845,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.revenue! / 1000_000_000,
+                                (ticket.revenue ?? 0) / 1000_000_000,
                                 decimals: 2,
                                 postfix: 'B',
                                 suffix: ticket.currency == "USD" ? '\$' : '',
@@ -830,7 +861,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.netIncome! / 1000_000_000,
+                                (ticket.netIncome ?? 0) / 1000_000_000,
                                 decimals: 2,
                                 postfix: 'B',
                                 suffix: ticket.currency == "USD" ? '\$' : '',
@@ -846,7 +877,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.totalDebt! / 1000_000_000,
+                                (ticket.totalDebt ?? 0) / 1000_000_000,
                                 decimals: 2,
                                 postfix: 'B',
                                 suffix: ticket.currency == "USD" ? '\$' : '',
@@ -862,7 +893,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.nta! / 1000_000_000,
+                                (ticket.nta ?? 0) / 1000_000_000,
                                 decimals: 2,
                                 postfix: 'B',
                                 suffix: ticket.currency == "USD" ? '\$' : '',
@@ -1158,7 +1189,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.buybackPercent! * 100,
+                                (ticket.buybackPercent ?? 0) * 100,
                                 decimals: 2,
                                 suffix: '%',
                               ),
@@ -1170,7 +1201,7 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.dividend! * 100,
+                                (ticket.dividend ?? 0) * 100,
                                 decimals: 1,
                                 suffix: '%',
                               ),
@@ -1250,11 +1281,18 @@ class _TicketsTableState extends State<TicketsTable> {
   }
 
   String _getTableSummaryText() {
+    if (isLoading && tickets.isEmpty) return 'Loading...';
+
     final filtered = filteredTickets;
     if (filtered.isEmpty) return 'No data';
 
-    final summary = _calculateTableSummary(filtered);
-    return 'Expected Growth: ${summary['expectedGrowth']}% | Avg Dividend: ${summary['avgDividend']}% | Avg P/E: ${summary['avgPE']}';
+    try {
+      final summary = _calculateTableSummary(filtered);
+      return 'Expected Growth: ${summary['expectedGrowth']}% | Avg Dividend: ${summary['avgDividend']}% | Avg P/E: ${summary['avgPE']}';
+    } catch (e) {
+      debugPrint('Error calculating table summary: $e');
+      return 'Summary unavailable';
+    }
   }
 
   Map<String, String> _calculateTableSummary(List<Ticket> tickets) {
@@ -1262,49 +1300,68 @@ class _TicketsTableState extends State<TicketsTable> {
       return {'expectedGrowth': 'N/A', 'avgDividend': 'N/A', 'avgPE': 'N/A'};
     }
 
-    // Calculate expected growth based on F.Avg vs current price
-    final validGrowthData = <double>[];
-    for (final ticket in tickets) {
-      final currentPrice = ticket.currentPrice;
-      final forecastAvg = _calculateForecastAverage(ticket);
-      if (currentPrice != null && forecastAvg != null && currentPrice > 0) {
-        final growth = ((forecastAvg - currentPrice) / currentPrice) * 100;
-        validGrowthData.add(growth);
+    try {
+      // Calculate expected growth based on F.Avg vs current price
+      final validGrowthData = <double>[];
+      for (final ticket in tickets) {
+        try {
+          final currentPrice = ticket.currentPrice;
+          if (currentPrice != null && currentPrice > 0) {
+            final forecastAvg = _calculateForecastAverage(ticket);
+            if (forecastAvg != null && forecastAvg > 0) {
+              final growth =
+                  ((forecastAvg - currentPrice) / currentPrice) * 100;
+              validGrowthData.add(growth);
+            }
+          }
+        } catch (e) {
+          // Skip this ticket if there's an error
+          debugPrint('Error calculating growth for ${ticket.ticker}: $e');
+          continue;
+        }
       }
+
+      // Calculate average dividend
+      final validDividends =
+          tickets
+              .where((t) => t.dividend != null && t.dividend! >= 0)
+              .map((t) => t.dividend! * 100)
+              .toList();
+
+      // Calculate average P/E
+      final validPEs =
+          tickets
+              .where((t) => t.pe != null && t.pe! > 0)
+              .map((t) => t.pe!)
+              .toList();
+
+      return {
+        'expectedGrowth':
+            validGrowthData.isEmpty
+                ? 'N/A'
+                : (validGrowthData.reduce((a, b) => a + b) /
+                        validGrowthData.length)
+                    .toStringAsFixed(1),
+        'avgDividend':
+            validDividends.isEmpty
+                ? 'N/A'
+                : (validDividends.reduce((a, b) => a + b) /
+                        validDividends.length)
+                    .toStringAsFixed(1),
+        'avgPE':
+            validPEs.isEmpty
+                ? 'N/A'
+                : (validPEs.reduce((a, b) => a + b) / validPEs.length)
+                    .toStringAsFixed(1),
+      };
+    } catch (e) {
+      debugPrint('Error in _calculateTableSummary: $e');
+      return {
+        'expectedGrowth': 'Error',
+        'avgDividend': 'Error',
+        'avgPE': 'Error',
+      };
     }
-
-    // Calculate average dividend
-    final validDividends =
-        tickets
-            .where((t) => t.dividend != null)
-            .map((t) => t.dividend! * 100)
-            .toList();
-
-    // Calculate average P/E
-    final validPEs =
-        tickets
-            .where((t) => t.pe != null && t.pe! > 0)
-            .map((t) => t.pe!)
-            .toList();
-
-    return {
-      'expectedGrowth':
-          validGrowthData.isEmpty
-              ? 'N/A'
-              : (validGrowthData.reduce((a, b) => a + b) /
-                      validGrowthData.length)
-                  .toStringAsFixed(1),
-      'avgDividend':
-          validDividends.isEmpty
-              ? 'N/A'
-              : (validDividends.reduce((a, b) => a + b) / validDividends.length)
-                  .toStringAsFixed(1),
-      'avgPE':
-          validPEs.isEmpty
-              ? 'N/A'
-              : (validPEs.reduce((a, b) => a + b) / validPEs.length)
-                  .toStringAsFixed(1),
-    };
   }
 
   double? _calculateForecastAverage(Ticket ticket) {

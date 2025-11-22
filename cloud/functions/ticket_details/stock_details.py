@@ -67,12 +67,12 @@ class StockDetails:
         
         def serialize_value(obj):
             """Helper function to handle complex numbers and other non-serializable objects"""
-            print(f"Serializing object of type: {type(obj).__name__}")
+            # print(f"Serializing object of type: {type(obj).__name__}")
             if isinstance(obj, complex):
                 print(f"Found complex number: {str(obj)}, converting to string")
                 return str(obj)
             elif hasattr(obj, 'to_json'):
-                print(f"Object has to_json method, calling it")
+                # print(f"Object has to_json method, calling it")
                 result = obj.to_json()
                 return result
             else:
@@ -119,6 +119,7 @@ class StockDetails:
         """
         Update financial metrics from Yahoo data
         """
+        print(f"Updating StockDetails for ticker: {self.ticker} from Yahoo data")
         import requests
         
         self.name = yahoo_data.get("longName", self.name)
@@ -152,7 +153,7 @@ class StockDetails:
         for metric in metrics:
             try:
                 metric.get_load_for_ticker(self, yahoo_data)
-                print(f"Successfully loaded metric: {metric.__class__.__name__}")
+                # print(f"Successfully loaded metric: {metric.__class__.__name__}")
             except (requests.exceptions.HTTPError, ValueError, TypeError) as e:
                 print(f"Error loading metric {metric.__class__.__name__}: {e}")
                 continue
@@ -171,7 +172,7 @@ class StockDetails:
         for metric in forecast_metrics:
             try:
                 metric.get_load_for_ticker(self, yahoo_data)
-                print(f"Successfully loaded forecast metric: {metric.__class__.__name__}")
+                # print(f"Successfully loaded forecast metric: {metric.__class__.__name__}")
             except (requests.exceptions.HTTPError, ValueError, TypeError) as e:
                 print(f"Error loading forecast metric {metric.__class__.__name__}: {e}")
                 continue

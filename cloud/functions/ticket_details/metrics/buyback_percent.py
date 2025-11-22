@@ -17,6 +17,13 @@ class BuybackPercent(FinancialMetric):
         shares_outstanding = stock_details.shares.value
         price = stock_details.current_price.value
 
+        if buyback is None or shares_outstanding is None or price is None:
+            print(f"Missing data for {self.name}: buyback={buyback}, shares={shares_outstanding}, price={price}")
+            self.value = 0
+            self.data_quality = 0.0
+            self.comment += f"\n - Missing buyback ({buyback}), shares ({shares_outstanding}), or price ({price})"
+            return
+
         try:
             self.value = buyback / (shares_outstanding * price)
             self.data_quality = stock_details.buyback.data_quality * stock_details.shares.data_quality

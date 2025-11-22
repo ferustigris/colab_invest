@@ -20,10 +20,10 @@ class PriceForecastFPE(FinancialMetric):
         price = stock_details.current_price.value
         fpe = stock_details.fpe.value
 
-        if growth <= 0 or fpe <= 0:
+        if growth is None or fpe is None or price is None or growth <= 0 or fpe <= 0:
             self.value = 0
             self.data_quality = 0.0
-            self.comment += f"\n - Invalid growth ({growth:.2f}) or Forward P/E ({fpe:.2f}) value"
+            self.comment += f"\n - Invalid growth ({growth}), Forward P/E ({fpe}), or price ({price}) value"
             return
 
         self.value = (8.5 + 2 * growth * 100) * price / fpe

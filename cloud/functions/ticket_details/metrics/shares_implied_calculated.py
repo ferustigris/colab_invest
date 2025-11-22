@@ -15,12 +15,12 @@ class SharesImpliedCalculated(FinancialMetric):
     def get_load_for_ticker(self, stock_details, yahoo_data):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")
 
-        if not 'currentPrice' in yahoo_data:
+        if not 'currentPrice' in yahoo_data or yahoo_data['currentPrice'] is None:
             print(f"currentPrice data not available for {stock_details.ticker}")
             self.data_quality = 0.0
             self.comment += "\n - currentPrice data not available"
             return
-        if not 'marketCap' in yahoo_data:
+        if not 'marketCap' in yahoo_data or yahoo_data['marketCap'] is None:
             print(f"marketCap data not available for {stock_details.ticker}")
             self.data_quality = 0.0
             self.comment += "\n - marketCap data not available"

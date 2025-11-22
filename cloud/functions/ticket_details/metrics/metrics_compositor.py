@@ -12,7 +12,12 @@ class MetricsCompositor(FinancialMetric):
             last_update
         )
 
-        self.methods = methods
+        self.methods = []
+        for method in methods:
+            if isinstance(method, MetricsCompositor):
+                self.methods.extend(method.methods)
+            else:
+                self.methods.append(method)
     
     def get_load_for_ticker(self, stock_details, yahoo_data):
         print(f"Loading data for {self.name} metric for ticker {stock_details.ticker}")

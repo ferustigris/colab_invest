@@ -17,6 +17,13 @@ class PriceForecastDiv(FinancialMetric):
         # =2/3*E2*V2/(1-1/(1+Trands!$D$3))
         price = stock_details.current_price.value
         div = stock_details.dividend.value
+        
+        if price is None or div is None:
+            self.value = 0
+            self.data_quality = 0.0
+            self.comment += f"\n - Invalid price ({price}) or dividend ({div}) value"
+            return
+            
         self.value = 2/3 * price * div / (1 - 1/(1 + 0.026))
         self.data_quality = stock_details.current_price.data_quality * stock_details.dividend.data_quality
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"

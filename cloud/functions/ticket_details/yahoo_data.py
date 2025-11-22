@@ -1,6 +1,52 @@
 class YahooData:
     """Data class for Yahoo Finance compatible data structure - only fields used by metrics"""
     
+    @staticmethod
+    def parse_abbreviated_number(value):
+        """Parse abbreviated numbers like '14.77B', '115.56M', '4.05T' to float
+        
+        Args:
+            value: String or numeric value
+            
+        Returns:
+            float: Parsed numeric value or None if parsing fails
+        """
+        if value is None or value == '':
+            return None
+            
+        if isinstance(value, (int, float)):
+            return float(value)
+            
+        if not isinstance(value, str):
+            return None
+            
+        value = value.strip().upper()
+        
+        # Remove any commas
+        value = value.replace(',', '')
+        
+        # Check for suffix
+        multipliers = {
+            'K': 1_000,
+            'M': 1_000_000,
+            'B': 1_000_000_000,
+            'T': 1_000_000_000_000,
+        }
+        
+        for suffix, multiplier in multipliers.items():
+            if value.endswith(suffix):
+                try:
+                    num = float(value[:-1])
+                    return num * multiplier
+                except ValueError:
+                    return None
+        
+        # Try to parse as plain number
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    
     def __init__(self):
         # Timestamp - most important field used by all metrics
         self.lastUpdate = None
@@ -202,7 +248,6 @@ class YahooData:
         return yahoo_data
 
 
-
     @classmethod
     def from_bb_fmp_dict(cls, data_dict, last_update=None):
         """Create YahooData from FMP dictionary with only required fields
@@ -259,6 +304,77 @@ class YahooData:
             
             # Book value
             'bookValue': data_dict.get('tangible_asset_value') / data_dict.get('weighted_average_basic_shares_outstanding'),
+            
+            # Technical indicators
+            'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
+        }
+        
+        # Set only the required fields
+        for key, value in required_fields.items():
+            setattr(yahoo_data, key, value)
+        
+        return yahoo_data
+
+
+    @classmethod
+    def from_bb_finviz_dict(cls, data_dict, last_update=None):
+        """Create YahooData from finviz dictionary with only required fields
+        
+        Args:
+            data_dict: Dictionary with finviz data fields
+            last_update: Optional lastUpdate timestamp, if not provided will try to get from data_dict
+                        If still not found, will use current timestamp
+        """
+        from datetime import datetime
+        
+        yahoo_data = cls()
+        
+        # Determine lastUpdate value
+        if last_update is None:
+            last_update = data_dict.get('lastUpdate')
+        if last_update is None:
+            # Use current timestamp if still not provided
+            last_update = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        shares_outstanding = cls.parse_abbreviated_number(data_dict.get('shares_outstanding'))
+        shares_float = cls.parse_abbreviated_number(data_dict.get('shares_float'))
+        market_cap = cls.parse_abbreviated_number(data_dict.get('market_cap'))
+        # Required fields mapping - only fields actually used by metrics
+        required_fields = {
+            # Timestamp - always set to ensure it's not None
+            'lastUpdate': last_update,
+            
+            # Company info
+            'longName': data_dict.get('longName'),
+            
+            # Price and market data
+            'currentPrice': data_dict.get('last_price'),
+            'marketCap': market_cap,
+            
+            # Revenue and income
+            'totalRevenue': data_dict.get('revenue'),
+            'netIncomeToCommon': data_dict.get('consolidated_net_income'),
+            
+            # Valuation metrics
+            'trailingPE': data_dict.get('pe_ratio'),
+            'forwardPE': data_dict.get('foward_pe'),
+            
+            # Financial health
+            'totalDebt': data_dict.get('net_debt_to_ebitda') * data_dict.get('ebitda') if data_dict.get('net_debt_to_ebitda') and data_dict.get('ebitda') else None,
+            'totalCash': data_dict.get('cash_per_share') * shares_outstanding if data_dict.get('cash_per_share') and shares_outstanding else None,
+            'freeCashflow': market_cap / data_dict.get('price_to_free_cash_flow'),
+            'ebitda': data_dict.get('ebitda'),
+            
+            # Dividends
+            'dividendYield': data_dict.get('dividend_yield'),
+            'fiveYearAvgDividendYield': data_dict.get('dividend_yield_5y_avg'),
+            
+            # Shares
+            'sharesOutstanding': shares_outstanding,
+            'impliedSharesOutstanding': shares_float,
+            
+            # Book value
+            'bookValue': data_dict.get('book_value_per_share') * shares_outstanding if shares_outstanding else None,
             
             # Technical indicators
             'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),

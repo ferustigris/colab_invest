@@ -15,7 +15,9 @@ class DebtEbitda(FinancialMetric):
         import time
         print(f"Loading data for debt EBITDA metric for ticker {stock_details.ticker}")
         # Calculate debt-to-EBITDA ratio
-        if 'totalDebt' in yahoo_data and 'ebitda' in yahoo_data and yahoo_data['ebitda'] > 0:
+        if ('totalDebt' in yahoo_data and yahoo_data['totalDebt'] is not None and
+            'ebitda' in yahoo_data and yahoo_data['ebitda'] is not None and 
+            yahoo_data['ebitda'] > 0):
             self.value = yahoo_data['totalDebt'] / yahoo_data['ebitda']
             self.data_quality = 0.6  # Good quality calculated ratio
             self.last_update = int(time.time())
