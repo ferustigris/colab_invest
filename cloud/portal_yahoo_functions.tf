@@ -60,6 +60,7 @@ resource "google_cloudfunctions_function" "ticket_details_function" {
     CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
     YAHOO_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/yahoo"
     BB_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/bb"
+    CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
     HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
     GET_METRIC_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/get_metric"
   }
@@ -103,6 +104,7 @@ resource "google_cloudfunctions_function" "yahoo_function" {
     GCLOUD_PROJECT = data.google_project.project.project_id
     GCLOUD_PROJECT_NUMBER = data.google_project.project.number
     TELEGRAM_CHAT_ID = "5081253547"
+    CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
     HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
   }
   depends_on = [
@@ -156,6 +158,7 @@ resource "google_cloudfunctions2_function" "bb_function" {
       GCLOUD_PROJECT = data.google_project.project.project_id
       GCLOUD_PROJECT_NUMBER = data.google_project.project.number
       HISTORIZER_URL = "https://europe-west1-colab-invest-helper.cloudfunctions.net/history"
+      CHAT_HISTORY_BUCKET = google_storage_bucket.chat_history.name
     }
     
     service_account_email = google_service_account.default_compute.email

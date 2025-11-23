@@ -53,11 +53,11 @@ class StockDetails:
         self.buyback = Buyback(self, data)
         self.buyback_percent = BuybackPercent(self, data)
         # Computed price forecasts
-        self.price_forecast_div = PriceForecastDiv(self, data)
-        self.price_forecast_div_buyback = PriceForecastDivBuyback(self, data)
-        self.price_forecast_pe = PriceForecastPE(self, data)
-        self.price_forecast_fpe = PriceForecastFPE(self, data)
-        self.price_forecast_equity = PriceForecastEquity(self, data)
+        self.price_forecast_div = PriceForecastDiv(self)
+        self.price_forecast_div_buyback = PriceForecastDivBuyback(self)
+        self.price_forecast_pe = PriceForecastPE(self)
+        self.price_forecast_fpe = PriceForecastFPE(self)
+        self.price_forecast_equity = PriceForecastEquity(self)
 
     def to_json(self):
         logger.debug(f"Starting to_json() for ticker: {self.ticker}")

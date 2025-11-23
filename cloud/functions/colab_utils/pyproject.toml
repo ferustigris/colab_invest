@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colab-utils"
-version = "0.0.15"
+version = "0.0.16"
 description = "Utils for Solvia project"
 authors = ["Andrey Kuznetsov <andrey_kuznetsov@epam.com>"]
 packages = [

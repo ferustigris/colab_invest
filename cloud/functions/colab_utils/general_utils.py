@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 
 import requests
 
+from gcp_utils import get_json_from_blob, store_json_to_blob
+
 
 def cors_headers(func):
     def wrapper(request, *args, **kwargs):
@@ -62,21 +64,18 @@ def cache(cache_hours=48):
                 # Implement caching logic here (e.g., check if response is cached)
                 path = request.url.replace('http://', '').replace('https://', '').replace('/', '_')
                 blob_name = f"cache_{path}_{user['uid']}.json"
-                historizer_url = os.environ.get("HISTORIZER_URL")
+                bucket_name = os.environ.get("CHAT_HISTORY_BUCKET")
 
-                response = requests.get(f"{historizer_url}/{blob_name}", headers=request.headers)
-                response.raise_for_status()
-                data = response.json().get(f"data", {})
-                data_last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
+                response_json = get_json_from_blob(blob_name, bucket_name)
+                data = response_json.get(f"data", {})
+                data_last_update = response_json.get("lastUpdate", "1970-01-01T00:00:00Z")
                 result = data
 
                 if not is_valid_cache(data_last_update, cache_hours):
                     result = func(request, user, *args, **kwargs)
                     data_last_update = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
-                    response = requests.post(f"{historizer_url}/{blob_name}", headers=request.headers, json={
-                        "data": result, "lastUpdate": data_last_update})
-                    response.raise_for_status()
+                    store_json_to_blob(blob_name, bucket_name, {"data": result, "lastUpdate": data_last_update})
                 return result
             else:
                 return func(request, user, *args, **kwargs)
@@ -87,12 +86,12 @@ def get_from_rest_or_cache(url, headers, user, cache_hours=48):
     """Fetch data from REST API with caching"""
     path = url.replace('http://', '').replace('https://', '').replace('/', '_')
     blob_name = f"cache_{path}_{user['uid']}.json"
-    historizer_url = os.environ.get("HISTORIZER_URL")
+    bucket_name = os.environ.get("CHAT_HISTORY_BUCKET")
 
-    response = requests.get(f"{historizer_url}/{blob_name}", headers=headers)
-    response.raise_for_status()
-    data = response.json().get("data", {})
-    data_last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")
+    response_json = get_json_from_blob(blob_name, bucket_name)
+
+    data = response_json.get("data", {})
+    data_last_update = response_json.get("lastUpdate", "1970-01-01T00:00:00Z")
     result = data
 
     if not is_valid_cache(data_last_update, cache_hours):

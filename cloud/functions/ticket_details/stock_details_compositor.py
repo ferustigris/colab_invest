@@ -1,4 +1,9 @@
 # Import all metric classes from individual files
+from metrics.price_forecast_div import PriceForecastDiv
+from metrics.price_forecast_div_buyback import PriceForecastDivBuyback
+from metrics.price_forecast_equity import PriceForecastEquity
+from metrics.price_forecast_fpe import PriceForecastFPE
+from metrics.price_forecast_pe import PriceForecastPE
 from yahoo_data import YahooData
 from metrics.metrics_compositor import MetricsCompositor
 from stock_details import StockDetails
@@ -173,49 +178,10 @@ class StockDetailsCompositor(StockDetails):
             self,
             data)
         # Computed price forecasts
-        self.price_forecast_div = MetricsCompositor(
-            first_ticket.price_forecast_div.name,
-            first_ticket.price_forecast_div.value,
-            first_ticket.price_forecast_div.comment,
-            first_ticket.price_forecast_div.data_quality,
-            first_ticket.price_forecast_div.last_update,
-            [t.price_forecast_div for t in tickets],
-            self,
-            data)
-        self.price_forecast_div_buyback = MetricsCompositor(
-            first_ticket.price_forecast_div_buyback.name,
-            first_ticket.price_forecast_div_buyback.value,
-            first_ticket.price_forecast_div_buyback.comment,
-            first_ticket.price_forecast_div_buyback.data_quality,
-            first_ticket.price_forecast_div_buyback.last_update,
-            [t.price_forecast_div_buyback for t in tickets],
-            self,
-            data)
-        self.price_forecast_pe = MetricsCompositor(
-            first_ticket.price_forecast_pe.name,
-            first_ticket.price_forecast_pe.value,
-            first_ticket.price_forecast_pe.comment,
-            first_ticket.price_forecast_pe.data_quality,
-            first_ticket.price_forecast_pe.last_update,
-            [t.price_forecast_pe for t in tickets],
-            self,
-            data)
-        self.price_forecast_fpe = MetricsCompositor(
-            first_ticket.price_forecast_fpe.name,
-            first_ticket.price_forecast_fpe.value,
-            first_ticket.price_forecast_fpe.comment,
-            first_ticket.price_forecast_fpe.data_quality,
-            first_ticket.price_forecast_fpe.last_update,
-            [t.price_forecast_fpe for t in tickets],
-            self,
-            data)
-        self.price_forecast_equity = MetricsCompositor(
-            first_ticket.price_forecast_equity.name,
-            first_ticket.price_forecast_equity.value,
-            first_ticket.price_forecast_equity.comment,
-            first_ticket.price_forecast_equity.data_quality,
-            first_ticket.price_forecast_equity.last_update,
-            [t.price_forecast_equity for t in tickets],
-            self,
-            data)
+        self.price_forecast_div = PriceForecastDiv(self)
+        self.price_forecast_div_buyback = PriceForecastDivBuyback(self)
+        self.price_forecast_pe = PriceForecastPE(self)
+        self.price_forecast_fpe = PriceForecastFPE(self)
+        self.price_forecast_equity = PriceForecastEquity(self)
+
 

@@ -306,13 +306,13 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "colab-utils"
-version = "0.0.15"
+version = "0.0.16"
 description = "Utils for Solvia project"
 optional = false
 python-versions = ">=3.11,<4.0"
 files = [
-    {file = "colab_utils-0.0.15-py3-none-any.whl", hash = "sha256:338be0f3c76c1a578d03aa3357c17548bc7de48d1584d8775791840270e612db"},
-    {file = "colab_utils-0.0.15.tar.gz", hash = "sha256:211a7aefc2b13799eb066de7acebfdf137b03904de5174bbd3affeac6d275437"},
+    {file = "colab_utils-0.0.16-py3-none-any.whl", hash = "sha256:ed23a699c9c56cf6db4535df8d05c7d69e9f6b33618deb4c4add87e5fd682f98"},
+    {file = "colab_utils-0.0.16.tar.gz", hash = "sha256:182069c64800e2c1fa95ee6e724e64d0f920448947d9231186e23f4b1c54c8a1"},
 ]
 
 [package.dependencies]
@@ -1412,4 +1412,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "ffb63d4b959274c440780a670a41cde0d421b16c4090fad581b3fb2f74b3047c"
+content-hash = "1e14e71a74e559b837c71aefac06f3af234430f45057a7531d5d7a04b178833a"

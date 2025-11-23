@@ -5,14 +5,14 @@ logger = logging.getLogger(__name__)
 
 
 class PriceForecastFPE(FinancialMetric):
-    def __init__(self, stock_details=None, yahoo_data=None):
+    def __init__(self, stock_details=None):
         super().__init__(
             "priceForecastFPE",
             0,
             "Price forecast based on Forward P/E ratio analysis",
             0,
             "1970-01-01T00:00:00Z"
-        , stock_details, yahoo_data)
+        , stock_details, None)
     
     def get_load_for_ticker(self):
         logger.info(f"Loading data for {self.name} metric for ticker {self.stock_details.ticker}")

@@ -1,9 +1,9 @@
 from functools import reduce
-from financial_metric import FinancialMetric
+from financial_metric import FinancialMetric, LOW_QUALITY, QUALITY_THREASHOLD
 import logging
+import statistics
 
 logger = logging.getLogger(__name__)
-QUALITY_THREASHOLD = 0.5
 
 class MetricsCompositor(FinancialMetric):
     def __init__(self, name, value, comment, data_quality, last_update, methods, stock_details=None, yahoo_data=None):
@@ -33,15 +33,20 @@ class MetricsCompositor(FinancialMetric):
             logger.debug(f"Method {metric.name} completed with quality={metric.data_quality}, value={metric.value}")
 
         valid_metrics = [metric for metric in self.methods if metric.data_quality > QUALITY_THREASHOLD and metric.value is not None]
+        if len(valid_metrics) == 0:
+            valid_metrics = [metric for metric in self.methods if metric.data_quality > LOW_QUALITY and metric.value is not None]
+            self.data_quality = LOW_QUALITY
+        else:
+            self.data_quality = reduce(lambda x, y: x * y, [metric.data_quality for metric in valid_metrics], 1.0)
 
-        self.data_quality = reduce(lambda x, y: x * y, [metric.data_quality for metric in valid_metrics], 1.0)
+
         logger.debug(f"Initial data quality (product): {self.data_quality}")
 
         try:
-            self.value = reduce(lambda x, y: x + y, [metric.value for metric in valid_metrics], 0) / len(valid_metrics)
+            self.value = statistics.median([metric.value for metric in valid_metrics])
             if self.value is None:
                 self.value = 0.0
-            logger.debug(f"Average value: {self.value} from {len(valid_metrics)} valid methods")
+            logger.debug(f"Median value: {self.value} from {len(valid_metrics)} valid methods")
         except ZeroDivisionError:
             logger.debug(f"No valid metrics available to compute average for {self.name}")
             self.value = 0

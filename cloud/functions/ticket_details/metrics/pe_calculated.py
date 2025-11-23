@@ -22,19 +22,14 @@ class PeCalculated(FinancialMetric):
             self.data_quality = 0.0
             self.comment += " - netIncomeToCommon data not available\n"
             return
-        if self.yahoo_data.get('sharesOutstanding') is None:
-            logger.debug(f"sharesOutstanding data not available for {self.stock_details.ticker}")
+        if self.yahoo_data.get('marketCap') is None:
+            logger.debug(f"marketCap data not available for {self.stock_details.ticker}")
             self.data_quality = 0.0
-            self.comment += " - sharesOutstanding data not available\n"
-            return
-        if self.yahoo_data.get('currentPrice') is None:
-            logger.debug(f"currentPrice data not available for {self.stock_details.ticker}")
-            self.data_quality = 0.0
-            self.comment += " - currentPrice data not available\n"
+            self.comment += " - marketCap data not available\n"
             return
 
         now = datetime.now()
-        self.value = round(self.yahoo_data['netIncomeToCommon'] / self.yahoo_data['sharesOutstanding'] / self.yahoo_data['currentPrice'] * 100)
+        self.value = round(self.yahoo_data['marketCap'] / self.yahoo_data['netIncomeToCommon'], 2)
         if self.value is None:
             self.value = 0.0
 

@@ -13,7 +13,7 @@ google-cloud-storage = "^2.1.0"
 google-auth = "^2.28.1"
 google-cloud-secret-manager = "^2.23.3"
 requests = "^2.31.0"
-colab-utils = { version = "^0.0.15", source = "gcp" }
+colab-utils = { version = "^0.0.16", source = "gcp" }
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4.0"
