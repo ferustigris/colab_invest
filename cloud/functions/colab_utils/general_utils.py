@@ -57,12 +57,18 @@ def is_valid_cache(data_last_update, cache_hours=48):
         return False
 
 
-def cache(cache_hours=48):
+def cache(cache_hours=48, func_name=None):
     def decorator(func):
         def wrapper(request, user, *args, **kwargs):
             if request.method == "GET":
                 # Implement caching logic here (e.g., check if response is cached)
-                path = request.url.replace('http://', '').replace('https://', '').replace('/', '_')
+                print(f"this is the request.url: {request.url}")
+                print(f"this is the request.path: {request.path}")
+                path = urlparse(request.url).path.replace('//', '/').replace('/', '_')
+                if func_name and not path.startswith(f"_{func_name}"):
+                    path = f"_{func_name}{path}"
+                print(f"this is the path: {path}")
+
                 blob_name = f"cache_{path}_{user['uid']}.json"
                 bucket_name = os.environ.get("CHAT_HISTORY_BUCKET")
 
@@ -84,7 +90,9 @@ def cache(cache_hours=48):
 
 def get_from_rest_or_cache(url, headers, user, cache_hours=48):
     """Fetch data from REST API with caching"""
-    path = url.replace('http://', '').replace('https://', '').replace('/', '_')
+    print(f"this is the request.url: {url}")
+    path = urlparse(url).path.replace('//', '/').replace('/', '_')
+    print(f"this is the path: {path}")
     blob_name = f"cache_{path}_{user['uid']}.json"
     bucket_name = os.environ.get("CHAT_HISTORY_BUCKET")
 

@@ -30,7 +30,7 @@ class PeCalculated(FinancialMetric):
 
         now = datetime.now()
         self.value = round(self.yahoo_data['marketCap'] / self.yahoo_data['netIncomeToCommon'], 2)
-        if self.value is None:
+        if self.value is None or self.value < 0:
             self.value = 0.0
 
         try:

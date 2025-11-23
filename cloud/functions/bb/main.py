@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 @cross_origin(methods=['POST', 'GET', 'OPTIONS'], origins='*')
 @exception_logger(log_message="Authentication error in bb function", code=401)
 @firebase_user_or_anonim
-@cache(cache_hours=48)
+@cache(cache_hours=48, func_name="bb")
 @exception_logger(log_message="Error in bb function")
 @exception_logger(exception_class=requests.exceptions.RequestException, log_message="Request error in bb function")
 @exception_logger(exception_class=requests.exceptions.HTTPError, log_message="HTTP error in bb function")
 def bb(request, user):
-    logger.debug("BB function called")
+    logger.info("BB function called request.url: {}".format(request.url))
 
     now = datetime.now()
     now_timestamp = datetime.strftime(now, "%Y-%m-%dT%H:%M:%SZ")

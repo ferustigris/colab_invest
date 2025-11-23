@@ -45,6 +45,11 @@ resource "google_cloudfunctions_function_iam_member" "get_metric_function_invoke
   member = "allUsers"
 }
 
+resource "google_storage_bucket_iam_member" "get_metric_function_storage_access" {
+  bucket = google_storage_bucket.chat_history.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_cloudfunctions_function.get_metric_function.service_account_email}"
+}
 
 resource "google_secret_manager_secret_iam_member" "allow_send_to_telegram_bot_function_access" {
   secret_id = "colab-invest-telegram-token" # Created manually

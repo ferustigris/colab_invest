@@ -51,6 +51,7 @@ def _get_stock_details(ticker):
 @cross_origin(allowed_methods=['POST', 'GET', 'OPTIONS'], origins='*')
 @exception_logger(log_message="Authentication error in ticket_details function", code=401)
 @firebase_user_or_anonim
+@cache(cache_hours=48, func_name="ticket_details")
 @exception_logger(log_message="Error in ticket_details function")
 @exception_logger(exception_class=requests.exceptions.RequestException, log_message="Request error in ticket_details function")
 @exception_logger(exception_class=requests.exceptions.HTTPError, log_message="HTTP error in ticket_details function")
