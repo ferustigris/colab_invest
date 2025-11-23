@@ -1,5 +1,6 @@
 import json
 import logging
+from general_utils import cache, get_from_rest_or_cache_anonymous
 from stock_details_compositor import StockDetailsCompositor
 from yahoo_data import YahooData
 from firebase_utils import firebase_user_or_anonim
@@ -50,6 +51,7 @@ def _get_stock_details(ticker):
 @cross_origin(allowed_methods=['POST', 'GET', 'OPTIONS'], origins='*')
 @exception_logger(log_message="Authentication error in ticket_details function", code=401)
 @firebase_user_or_anonim
+@cache
 @exception_logger(log_message="Error in ticket_details function")
 @exception_logger(exception_class=requests.exceptions.RequestException, log_message="Request error in ticket_details function")
 @exception_logger(exception_class=requests.exceptions.HTTPError, log_message="HTTP error in ticket_details function")
@@ -67,10 +69,9 @@ def ticket_details(request, user):
 def _fetch_provider_specific_data(url, headers):
     """Fetch Yahoo data for given ticker"""
     logger.debug(f"Fetching data from URL: {url}")
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    logger.debug(f"Received response : {json.dumps(response.json(), indent=2)}")
-    return response.json().copy()
+    response_json = get_from_rest_or_cache_anonymous(url, headers)
+    logger.debug(f"Received response : {json.dumps(response_json, indent=2)}")
+    return response_json.copy()
 
 
 if __name__ == "__main__":

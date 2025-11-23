@@ -1,29 +1,13 @@
-from financial_metric import DEFAULT_QUALITY, FinancialMetric
+from metrics.general_metric import GenericMetric
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class Ebitda(FinancialMetric):
+class Ebitda(GenericMetric):
     def __init__(self, stock_details=None, yahoo_data=None):
         super().__init__(
             "ebitda",
-            0,
             "Earnings before interest, taxes, depreciation, and amortization",
-            0,
-            "1970-01-01T00:00:00Z"
-        , stock_details, yahoo_data)
-    
-    def get_load_for_ticker(self):
-        import time
-        logger.debug(f"Loading data for EBITDA metric for ticker {self.stock_details.ticker}")
-        if 'ebitda' in self.yahoo_data:
-            self.value = self.yahoo_data['ebitda']
-            if self.value is None:
-                self.value = 0.0
-            self.data_quality = DEFAULT_QUALITY if self.value else 0.0  # Good quality financial statement data
-            self.last_update = int(time.time())
-            logger.info(f"Ebitda metric loaded successfully: value={self.value}, quality={self.data_quality}")
-        else:
-            logger.info(f"ebitda data not available for {self.stock_details.ticker}")
-            self.data_quality = 0.0
+            ["ebitda"],
+            stock_details, yahoo_data)

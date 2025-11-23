@@ -18,10 +18,8 @@ from metrics.pe import Pe
 from metrics.fpe import Fpe
 from metrics.ps import Ps
 from metrics.total_debt import TotalDebt
-from metrics.debt_ebitda import DebtEbitda
 from metrics.cash import Cash
 from metrics.dividend import Dividend
-from metrics.free_cash_flow import FreeCashFlow
 from metrics.buyback import Buyback
 from metrics.buyback_percent import BuybackPercent
 import logging
@@ -52,7 +50,6 @@ class StockDetails:
         self.total_debt = TotalDebt(self, data)
         self.cash = Cash(self, data)
         self.dividend = Dividend(self, data)
-        self.free_cash_flow = FreeCashFlow(self, data)
         self.buyback = Buyback(self, data)
         self.buyback_percent = BuybackPercent(self, data)
         # Computed price forecasts
@@ -104,7 +101,6 @@ class StockDetails:
             "totalDebt": serialize_value(self.total_debt),
             "cash": serialize_value(self.cash),
             "dividend": serialize_value(self.dividend),
-            "freeCashFlow": serialize_value(self.free_cash_flow),
             "buyback": serialize_value(self.buyback),
             "buybackPercent": serialize_value(self.buyback_percent)
         }
@@ -139,7 +135,6 @@ class StockDetails:
             self.total_debt,
             self.cash,
             self.dividend,
-            self.free_cash_flow,
             self.buyback
         ]
         

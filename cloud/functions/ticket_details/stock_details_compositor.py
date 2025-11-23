@@ -154,15 +154,6 @@ class StockDetailsCompositor(StockDetails):
             [t.dividend for t in tickets],
             self,
             data)
-        self.free_cash_flow = MetricsCompositor(
-            first_ticket.free_cash_flow.name,
-            first_ticket.free_cash_flow.value,
-            first_ticket.free_cash_flow.comment,
-            first_ticket.free_cash_flow.data_quality,
-            first_ticket.free_cash_flow.last_update,
-            [t.free_cash_flow for t in tickets],
-            self,
-            data)
         self.buyback = MetricsCompositor(
             first_ticket.buyback.name,
             first_ticket.buyback.value,

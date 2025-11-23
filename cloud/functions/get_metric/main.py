@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 from ai_utils import create_openai_payload, USER_ROLE_NAME, create_chat_history_entry
+from firebase_utils import firebase_user_or_anonim
+from general_utils import cache
 from gcp_utils import get_secret
 from general_utils import cors_headers, exception_logger
 from flask_cors import cross_origin
@@ -51,10 +53,12 @@ def is_valid_cache(last_update, data, quality, cache_hours=240):
 
 @cors_headers
 @cross_origin(allowed_methods=['POST', 'GET', 'OPTIONS'], origins='*')
+@firebase_user_or_anonim
+@cache(cache_hours=240)
 @exception_logger(log_message="Error in get_metric function")
 @exception_logger(exception_class=requests.exceptions.RequestException, log_message="Request error in get_metric function")
 @exception_logger(exception_class=requests.exceptions.HTTPError, log_message="HTTP error in get_metric function")
-def get_metric(request):
+def get_metric(request, user):
     openai_api_key = get_secret("chatgpt-api-key")
     
     openai_api = "https://api.openai.com/v1/chat/completions"

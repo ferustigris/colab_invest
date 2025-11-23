@@ -88,7 +88,7 @@ class YahooData:
         self.bookValue = None
         
         # Technical indicators
-        self.twoHundredDayAverage = None
+        self.sma = None
     
     def get(self, key, default=None):
         """Dictionary-like get method for backward compatibility"""
@@ -181,7 +181,7 @@ class YahooData:
             'bookValue': data_dict.get('bookValue'),
             
             # Technical indicators
-            'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
+            'sma': data_dict.get('twoHundredDayAverage'),
         }
         
         # Set only the required fields
@@ -241,7 +241,7 @@ class YahooData:
             'ebitda': None,
             
             # Dividends
-            'dividendYield': data_dict.get('dividend_yield'),
+            'dividendYield': data_dict.get('dividend_yield') / 100.0 if data_dict.get('dividend_yield') is not None else None,  # Convert percentage to decimal,,
             'fiveYearAvgDividendYield': data_dict.get('dividend_yield_5y_avg'),
             
             # Shares
@@ -252,7 +252,7 @@ class YahooData:
             'bookValue': data_dict.get('book_value'),
             
             # Technical indicators
-            'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
+            'sma': data_dict.get('twoHundredDayAverage'),#TODO: verify
         }
         
         # Set only the required fields
@@ -322,7 +322,7 @@ class YahooData:
             'bookValue': data_dict.get('tangible_asset_value') / data_dict.get('weighted_average_basic_shares_outstanding') if data_dict.get('tangible_asset_value') and data_dict.get('weighted_average_basic_shares_outstanding') else None,
             
             # Technical indicators
-            'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
+            'sma': data_dict.get('twoHundredDayAverage'),#TODO: verify
         }
         
         # Set only the required fields
@@ -394,7 +394,7 @@ class YahooData:
             'bookValue': data_dict.get('book_value_per_share'),
             
             # Technical indicators
-            'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
+            'sma': data_dict.get('twoHundredDayAverage'),#TODO: verify
         }
         
         # Set only the required fields

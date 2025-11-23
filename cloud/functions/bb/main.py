@@ -1,6 +1,7 @@
 from functools import reduce
 import json
 import os
+from general_utils import cache
 from gcp_utils import get_secret
 from firebase_utils import firebase_user_or_anonim
 from general_utils import cors_headers, exception_logger
@@ -38,6 +39,7 @@ def is_valid_cache(data_last_update, data, cache_hours=48):
 @cross_origin(methods=['POST', 'GET', 'OPTIONS'], origins='*')
 @exception_logger(log_message="Authentication error in bb function", code=401)
 @firebase_user_or_anonim
+@cache(cache_hours=48)
 @exception_logger(log_message="Error in bb function")
 @exception_logger(exception_class=requests.exceptions.RequestException, log_message="Request error in bb function")
 @exception_logger(exception_class=requests.exceptions.HTTPError, log_message="HTTP error in bb function")
