@@ -127,15 +127,6 @@ class StockDetailsCompositor(StockDetails):
             [t.ps for t in tickets],
             self,
             data)
-        self.ev_ebitda = MetricsCompositor(
-            first_ticket.ev_ebitda.name,
-            first_ticket.ev_ebitda.value,
-            first_ticket.ev_ebitda.comment,
-            first_ticket.ev_ebitda.data_quality,
-            first_ticket.ev_ebitda.last_update,
-            [t.ev_ebitda for t in tickets],
-            self,
-            data)
         self.total_debt = MetricsCompositor(
             first_ticket.total_debt.name,
             first_ticket.total_debt.value,
@@ -143,15 +134,6 @@ class StockDetailsCompositor(StockDetails):
             first_ticket.total_debt.data_quality,
             first_ticket.total_debt.last_update,
             [t.total_debt for t in tickets],
-            self,
-            data)
-        self.debt_ebitda = MetricsCompositor(
-            first_ticket.debt_ebitda.name,
-            first_ticket.debt_ebitda.value,
-            first_ticket.debt_ebitda.comment,
-            first_ticket.debt_ebitda.data_quality,
-            first_ticket.debt_ebitda.last_update,
-            [t.debt_ebitda for t in tickets],
             self,
             data)
         self.cash = MetricsCompositor(
@@ -197,15 +179,6 @@ class StockDetailsCompositor(StockDetails):
             first_ticket.buyback_percent.data_quality,
             first_ticket.buyback_percent.last_update,
             [t.buyback_percent for t in tickets],
-            self,
-            data)
-        self.free_cash_flow_per_stock = MetricsCompositor(
-            first_ticket.free_cash_flow_per_stock.name,
-            first_ticket.free_cash_flow_per_stock.value,
-            first_ticket.free_cash_flow_per_stock.comment,
-            first_ticket.free_cash_flow_per_stock.data_quality,
-            first_ticket.free_cash_flow_per_stock.last_update,
-            [t.free_cash_flow_per_stock for t in tickets],
             self,
             data)
         # Computed price forecasts

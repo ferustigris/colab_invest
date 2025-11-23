@@ -51,6 +51,7 @@ class YahooData:
             return None
     
     def __init__(self):
+        self.provider = "default"
         # Timestamp - most important field used by all metrics
         self.lastUpdate = None
         
@@ -69,7 +70,6 @@ class YahooData:
         self.trailingPE = None
         self.forwardPE = None
         self.ps = None
-        self.enterpriseToEbitda = None
         
         # Financial health
         self.totalDebt = None
@@ -141,6 +141,7 @@ class YahooData:
         
         # Required fields mapping - only fields actually used by metrics
         required_fields = {
+            'provider': 'yfinance',
             # Timestamp - used by all metrics for validation
             'lastUpdate': last_update if last_update is not None else data_dict.get('lastUpdate'),
             
@@ -159,7 +160,6 @@ class YahooData:
             'trailingPE': data_dict.get('trailingPE'),
             'forwardPE': data_dict.get('forwardPE'),
             'ps': data_dict.get('priceToSalesTrailing12Months'),
-            'enterpriseToEbitda': data_dict.get('enterpriseToEbitda'),
             
             # Financial health
             'totalDebt': data_dict.get('totalDebt'),
@@ -168,10 +168,10 @@ class YahooData:
             'ebitda': data_dict.get('ebitda'),
             
             # Dividends
-            'fiveYearAvgDividendYield': data_dict.get('fiveYearAvgDividendYield'),
-            'dividendYield': data_dict.get('dividendYield'),
+            'fiveYearAvgDividendYield': data_dict.get('fiveYearAvgDividendYield') / 100 if data_dict.get('fiveYearAvgDividendYield') is not None else None,  # Already percentage
+            'dividendYield': data_dict.get('dividendYield') / 100.0 if data_dict.get('dividendYield') is not None else None,  # Convert percentage to decimal,
             'trailingAnnualDividendYield': data_dict.get('trailingAnnualDividendYield'),
-            'forwardAnnualDividendYield': data_dict.get('forwardAnnualDividendYield'),
+            'forwardAnnualDividendYield': data_dict.get('forwardAnnualDividendYield') / 100 if data_dict.get('forwardAnnualDividendYield') is not None else None,  # Already percentage,
             
             # Shares
             'sharesOutstanding': data_dict.get('sharesOutstanding'),
@@ -215,39 +215,41 @@ class YahooData:
         required_fields = {
             # Timestamp - always set to ensure it's not None
             'lastUpdate': last_update,
+            'provider': 'bb_yfinance',
+            'currency': data_dict.get('currency'),
             
             # Company info
-            'longName': data_dict.get('longName'),
+            'longName': data_dict.get('name'),
             
             # Price and market data
             'currentPrice': data_dict.get('currentPrice'),
-            'marketCap': data_dict.get('marketCap'),
+            'marketCap': data_dict.get('market_cap'),
             
             # Revenue and income
             'totalRevenue': data_dict.get('totalRevenue'),
             'netIncomeToCommon': data_dict.get('netIncomeToCommon'),
             
             # Valuation metrics
-            'trailingPE': data_dict.get('trailingPE'),
-            'forwardPE': data_dict.get('forwardPE'),
-            'priceToSalesTrailing12Months': data_dict.get('priceToSalesTrailing12Months'),
-            'enterpriseToEbitda': data_dict.get('enterpriseToEbitda'),
+            'trailingPE': data_dict.get('pe_ratio'),
+            'forwardPE': data_dict.get('forward_pe'),
+            'ps': None,
             
             # Financial health
-            'totalDebt': data_dict.get('totalDebt'),
-            'totalCash': data_dict.get('totalCash'),
-            'freeCashflow': data_dict.get('freeCashflow'),
-            'ebitda': data_dict.get('ebitda'),
+            'totalDebt': None,
+            'totalCash': data_dict.get('cash_per_share') * data_dict.get('shares_outstanding') if data_dict.get('cash_per_share') and data_dict.get('shares_outstanding') else None,
+            'freeCashflow': None,
+            'ebitda': None,
             
             # Dividends
-            'dividendYield': data_dict.get('dividendYield'),
+            'dividendYield': data_dict.get('dividend_yield'),
+            'fiveYearAvgDividendYield': data_dict.get('dividend_yield_5y_avg'),
             
             # Shares
-            'sharesOutstanding': data_dict.get('sharesOutstanding'),
-            'impliedSharesOutstanding': data_dict.get('impliedSharesOutstanding'),
+            'sharesOutstanding': data_dict.get('shares_outstanding'),
+            'impliedSharesOutstanding': data_dict.get('shares_implied_outstanding'),
             
             # Book value
-            'bookValue': data_dict.get('bookValue'),
+            'bookValue': data_dict.get('book_value'),
             
             # Technical indicators
             'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),
@@ -284,9 +286,11 @@ class YahooData:
         required_fields = {
             # Timestamp - always set to ensure it's not None
             'lastUpdate': last_update,
-            
+            'provider': 'bb_fmp',
+            'currency': data_dict.get('currency'),
+
             # Company info
-            'longName': data_dict.get('longName'),
+            'longName': data_dict.get('name'),
             
             # Price and market data
             'currentPrice': data_dict.get('last_price'),
@@ -294,21 +298,21 @@ class YahooData:
             
             # Revenue and income
             'totalRevenue': data_dict.get('revenue'),
-            'netIncomeToCommon': data_dict.get('consolidated_net_income'),
+            'netIncomeToCommon': data_dict.get('net_income') or data_dict.get('consolidated_net_income'),
             
             # Valuation metrics
-            'trailingPE': data_dict.get('pe_ratio'),
-            'forwardPE': data_dict.get('forward_pe'),
+            'trailingPE': data_dict.get('pe_ratio'),#TODO: verify
+            'forwardPE': data_dict.get('forward_pe'),#TODO: verify
             
             # Financial health
             'totalDebt': data_dict.get('net_debt_to_ebitda') * data_dict.get('ebitda') if data_dict.get('net_debt_to_ebitda') and data_dict.get('ebitda') else None,
             'totalCash': data_dict.get('cash_per_share') * data_dict.get('weighted_average_basic_shares_outstanding') if data_dict.get('cash_per_share') and data_dict.get('weighted_average_basic_shares_outstanding') else None,
-            'freeCashflow': data_dict.get('free_cash_flow_yield') * data_dict.get('market_cap') if data_dict.get('free_cash_flow_yield') and data_dict.get('market_cap') else None,
+            'freeCashflow': data_dict.get('free_cash_flow') or (data_dict.get('free_cash_flow_yield') * data_dict.get('market_cap') if data_dict.get('free_cash_flow_yield') and data_dict.get('market_cap') else None),
             'ebitda': data_dict.get('ebitda'),
             
             # Dividends
-            'dividendYield': data_dict.get('dividend_yield'),
-            'fiveYearAvgDividendYield': data_dict.get('dividend_yield_5y_avg'),
+            'dividendYield': data_dict.get('annualized_dividend_amount') / data_dict.get('last_price') if data_dict.get('annualized_dividend_amount') and data_dict.get('last_price') else None,
+            'fiveYearAvgDividendYield': None,
             
             # Shares
             'sharesOutstanding': data_dict.get('weighted_average_basic_shares_outstanding'),
@@ -355,9 +359,10 @@ class YahooData:
         required_fields = {
             # Timestamp - always set to ensure it's not None
             'lastUpdate': last_update,
-            
+            'provider': 'bb_finviz',
             # Company info
-            'longName': data_dict.get('longName'),
+            'longName': data_dict.get('name'),
+            'currency': data_dict.get('currency'),
             
             # Price and market data
             'currentPrice': data_dict.get('last_price'),
@@ -374,7 +379,7 @@ class YahooData:
             # Financial health
             'totalDebt': data_dict.get('net_debt_to_ebitda') * data_dict.get('ebitda') if data_dict.get('net_debt_to_ebitda') and data_dict.get('ebitda') else None,
             'totalCash': data_dict.get('cash_per_share') * shares_outstanding if data_dict.get('cash_per_share') and shares_outstanding else None,
-            'freeCashflow': market_cap / data_dict.get('price_to_free_cash_flow'),
+            'freeCashflow': None,
             'ebitda': data_dict.get('ebitda'),
             
             # Dividends
@@ -386,7 +391,7 @@ class YahooData:
             'impliedSharesOutstanding': shares_float,
             
             # Book value
-            'bookValue': data_dict.get('book_value_per_share') * shares_outstanding if shares_outstanding else None,
+            'bookValue': data_dict.get('book_value_per_share'),
             
             # Technical indicators
             'twoHundredDayAverage': data_dict.get('twoHundredDayAverage'),

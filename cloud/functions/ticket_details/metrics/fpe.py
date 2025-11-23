@@ -25,11 +25,14 @@ class Fpe(FinancialMetric):
             return
 
         now = datetime.now()
-    
+        self.value = self.yahoo_data['forwardPE']
+        if self.value is None:
+            self.value = 0.0
+
         try:
             self.yahoo_data_last_update_dt = datetime.strptime(self.yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
-            self.data_quality = 1.0/((now - self.yahoo_data_last_update_dt).days + 1)
+            self.data_quality = 1.0/((now - self.yahoo_data_last_update_dt).days + 1) if self.value else 0.0
             logger.debug(f"Successfully calculated data quality for {self.name}: {self.data_quality}")
         except ValueError:
             logger.debug(f"Invalid last update format for {self.name} metric: {self.yahoo_data.get('lastUpdate', 'N/A')}")
@@ -39,6 +42,5 @@ class Fpe(FinancialMetric):
 
         self.comment += "\n - last update on " + self.yahoo_data['lastUpdate']
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
-        self.value = self.yahoo_data['forwardPE']
         self.last_update = self.yahoo_data['lastUpdate']
-        logger.info(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        logger.info(f"{self.name} metric loaded successfully: value={self.value:.2f}, quality={self.data_quality:.2f}")

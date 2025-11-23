@@ -25,7 +25,7 @@ class AiMetric(FinancialMetric):
         response.raise_for_status()
 
         self.value = response.json().get("value", 0)
-        self.data_quality = response.json().get("dataQuality", 0)
+        self.data_quality = response.json().get("dataQuality", 0  if self.value else 0.0)
         self.comment += "\n" + response.json().get("rawData", "No data available")
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
         self.last_update = response.json().get("lastUpdate", "1970-01-01T00:00:00Z")

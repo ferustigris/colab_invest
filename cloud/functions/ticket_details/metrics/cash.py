@@ -1,4 +1,4 @@
-from financial_metric import FinancialMetric
+from financial_metric import LOW_QUALITY, FinancialMetric
 from datetime import datetime, timedelta
 import logging
 
@@ -18,27 +18,31 @@ class Cash(FinancialMetric):
     def get_load_for_ticker(self):
         logger.info(f"Loading data for {self.name} metric for ticker {self.stock_details.ticker}")
         
-        if not 'totalCash' in self.yahoo_data:
+        if 'totalCash' in self.yahoo_data:
+            self.value = self.yahoo_data['totalCash']
+        elif 'freeCashflow' in self.yahoo_data:
+            self.value = self.yahoo_data['freeCashflow']
+        else:
             logger.debug(f"totalCash data not available for {self.stock_details.ticker}")
             self.data_quality = 0.0
-            self.comment += "\n - totalCash data not available"
+            self.comment += "\n - totalCash or freeCashflow data not available"
             return
+        if self.value is None:
+            self.value = 0.0
 
         now = datetime.now()
     
         try:
             self.yahoo_data_last_update_dt = datetime.strptime(self.yahoo_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
             now = datetime.now()
-            self.data_quality = 1.0/((now - self.yahoo_data_last_update_dt).days // 7 + 1)
-            logger.debug(f"Successfully calculated data quality for {self.name}: {self.data_quality}")
+            self.data_quality = 1.0/((now - self.yahoo_data_last_update_dt).days // 7 + 1) if self.value else 0.0
+            logger.debug(f"Successfully calculated data quality for {self.name}: {self.data_quality:.2f}")
         except ValueError:
             logger.debug(f"Invalid last update format for {self.name} metric: {self.yahoo_data.get('lastUpdate', 'N/A')}")
-            self.data_quality = 0.1
+            self.data_quality = LOW_QUALITY
             self.comment += "\n - invalid last update format"
             return
-
         self.comment += "\n - last update on " + self.yahoo_data['lastUpdate']
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"
-        self.value = self.yahoo_data['totalCash']
         self.last_update = self.yahoo_data['lastUpdate']
-        logger.info(f"{self.name} metric loaded successfully: value={self.value}, quality={self.data_quality}")
+        logger.info(f"{self.name} metric loaded successfully: value={self.value:.2f}, quality={self.data_quality:.2f}")

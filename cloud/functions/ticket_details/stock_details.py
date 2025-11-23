@@ -17,7 +17,6 @@ from metrics.nta import Nta
 from metrics.pe import Pe
 from metrics.fpe import Fpe
 from metrics.ps import Ps
-from metrics.ev_ebitda import EvEbitda
 from metrics.total_debt import TotalDebt
 from metrics.debt_ebitda import DebtEbitda
 from metrics.cash import Cash
@@ -25,7 +24,6 @@ from metrics.dividend import Dividend
 from metrics.free_cash_flow import FreeCashFlow
 from metrics.buyback import Buyback
 from metrics.buyback_percent import BuybackPercent
-from metrics.free_cash_flow_per_stock import FreeCashFlowPerStock
 import logging
 
 logger = logging.getLogger(__name__)
@@ -51,15 +49,12 @@ class StockDetails:
         self.pe = Pe(self, data)
         self.fpe = Fpe(self, data)
         self.ps = Ps(self, data)
-        self.ev_ebitda = EvEbitda(self, data)
         self.total_debt = TotalDebt(self, data)
-        self.debt_ebitda = DebtEbitda(self, data)
         self.cash = Cash(self, data)
         self.dividend = Dividend(self, data)
         self.free_cash_flow = FreeCashFlow(self, data)
         self.buyback = Buyback(self, data)
         self.buyback_percent = BuybackPercent(self, data)
-        self.free_cash_flow_per_stock = FreeCashFlowPerStock(self, data)
         # Computed price forecasts
         self.price_forecast_div = PriceForecastDiv(self, data)
         self.price_forecast_div_buyback = PriceForecastDivBuyback(self, data)
@@ -106,18 +101,15 @@ class StockDetails:
             "pe": serialize_value(self.pe),
             "fpe": serialize_value(self.fpe),
             # "ps": serialize_value(self.ps),
-            # "evEbitda": serialize_value(self.ev_ebitda),
             "totalDebt": serialize_value(self.total_debt),
-            # "debtEbitda": serialize_value(self.debt_ebitda),
             "cash": serialize_value(self.cash),
             "dividend": serialize_value(self.dividend),
             "freeCashFlow": serialize_value(self.free_cash_flow),
             "buyback": serialize_value(self.buyback),
-            "buybackPercent": serialize_value(self.buyback_percent),
-            # "freeCashFlowPerStock": serialize_value(self.free_cash_flow_per_stock)
+            "buybackPercent": serialize_value(self.buyback_percent)
         }
         
-        logger.info(f"Completed to_json() for ticker: {self.ticker}, result keys: {result}")
+        logger.debug(f"Completed to_json() for ticker: {self.ticker}, result keys: {result}")
         return result
     
     def update_from_yahoo_data(self):
@@ -144,14 +136,11 @@ class StockDetails:
             self.pe,
             self.fpe,
             self.ps,
-            self.ev_ebitda,
             self.total_debt,
-            self.debt_ebitda,
             self.cash,
             self.dividend,
             self.free_cash_flow,
-            self.buyback,
-            self.free_cash_flow_per_stock
+            self.buyback
         ]
         
         # Process all basic metrics

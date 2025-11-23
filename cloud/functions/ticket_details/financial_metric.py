@@ -2,6 +2,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_QUALITY = 0.6
+LOW_QUALITY = 0.1
+
 class FinancialMetric:
     def __init__(self, name, value, comment, data_quality, last_update, stock_details=None, yahoo_data=None):
         self.name = name

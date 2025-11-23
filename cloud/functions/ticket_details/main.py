@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from stock_details import StockDetails
 import os
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -22,12 +22,11 @@ def _get_stock_details(ticker):
     yahoo_url = os.environ.get("YAHOO_URL")
     url = f"{yahoo_url}/{ticker}"
     bb_provider_specific_data = _fetch_provider_specific_data(url, {})
-    unified_data = YahooData.from_dict(bb_provider_specific_data, provider='yfinance')
-    stock_details = StockDetails(ticker, unified_data)
-    details_from_sources.append(stock_details)
+    yahoo_data = YahooData.from_dict(bb_provider_specific_data, provider='yfinance')
+    yahoo_stock_details = StockDetails(ticker, yahoo_data)
+    details_from_sources.append(yahoo_stock_details)
 
-    logger.debug(f"Yahoo stock details: {stock_details.to_json()}")
-    
+    logger.debug(f"Yahoo stock details: {yahoo_stock_details.to_json()}")
     for provider in ['yfinance', 'finviz', 'fmp']:
         try:
             bb_yahoo_url = os.environ.get("BB_URL")
@@ -42,6 +41,8 @@ def _get_stock_details(ticker):
             logger.warning(f"Error fetching BB {provider} data for ticker {ticker}: {e}")
 
     stock_info_composed = StockDetailsCompositor(ticker, details_from_sources, unified_data)
+    for stock_info in details_from_sources:
+        stock_info.update_from_yahoo_data()
     stock_info_composed.update_from_yahoo_data()
     return stock_info_composed
 
@@ -69,7 +70,7 @@ def _fetch_provider_specific_data(url, headers):
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     logger.debug(f"Received response : {json.dumps(response.json(), indent=2)}")
-    return response.json()
+    return response.json().copy()
 
 
 if __name__ == "__main__":

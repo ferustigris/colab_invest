@@ -15,7 +15,7 @@ class BuybackPercent(FinancialMetric):
         , stock_details, yahoo_data)
     
     def get_load_for_ticker(self):
-        logger.info(f"Loading data for {self.name} metric for ticker {self.stock_details.ticker}")
+        logger.debug(f"Loading data for {self.name} metric for ticker {self.stock_details.ticker}")
         buyback = self.stock_details.buyback.value
         shares_outstanding = self.stock_details.shares.value
         price = self.stock_details.current_price.value
@@ -31,7 +31,7 @@ class BuybackPercent(FinancialMetric):
             self.value = buyback / (shares_outstanding * price)
             self.data_quality = self.stock_details.buyback.data_quality * self.stock_details.shares.data_quality
         except ZeroDivisionError:
-            logger.debug(f"Shares outstanding is zero for ticker {self.stock_details.ticker}, cannot compute {self.name}")
+            logger.warning(f"Shares outstanding is zero for ticker {self.stock_details.ticker}, cannot compute {self.name}")
             self.value = 0
             self.data_quality = 0.0
             self.comment += "\n - shares outstanding is zero, cannot compute metric"
