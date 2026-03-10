@@ -45,6 +45,7 @@ class _TicketsTableState extends State<TicketsTable> {
   bool _isSeedingUserCategories = false;
   bool _isUploadingListToFirestore = false;
   bool _isAddingTicker = false;
+  bool _isDeletingList = false;
   final Set<String> _refreshingTickers = <String>{};
   final Set<String> _analyticsInactiveTickers = <String>{};
   final Set<String> _deletingTickers = <String>{};
@@ -637,6 +638,77 @@ class _TicketsTableState extends State<TicketsTable> {
     }
   }
 
+  Future<void> _confirmDeleteCurrentList() async {
+    if (_isDeletingList) return;
+
+    if (categories.length <= 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot delete the last list'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Current List'),
+          content: Text(
+            'Delete list "$selectedCategory" with all its tickers from Firebase?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isDeletingList = true;
+    });
+
+    try {
+      await TicketService.deleteFirebaseList(category: selectedCategory);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('List "$selectedCategory" deleted'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete list: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isDeletingList = false;
+      });
+    }
+  }
+
   bool _isTickerStale(Ticket ticket) {
     if (ticket.updatedAt == null) {
       return true;
@@ -1126,6 +1198,36 @@ class _TicketsTableState extends State<TicketsTable> {
                             ],
                           ),
                         ),
+                        DropdownMenuItem<String>(
+                          value: '__delete_list__',
+                          enabled: !_isDeletingList,
+                          child: Row(
+                            children: [
+                              _isDeletingList
+                                  ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Icon(
+                                    Icons.delete_outline,
+                                    size: 14,
+                                    color: Colors.red,
+                                  ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Delete List',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                       onChanged:
                           isCategoriesLoading
@@ -1135,6 +1237,8 @@ class _TicketsTableState extends State<TicketsTable> {
                                   _showCreateCollectionDialog();
                                 } else if (value == '__import_list__') {
                                   _showImportListDialog();
+                                } else if (value == '__delete_list__') {
+                                  _confirmDeleteCurrentList();
                                 } else if (value != null &&
                                     value != dropdownValue) {
                                   _uploadListSnapshotToFirebase(

@@ -478,11 +478,17 @@ class TicketService {
         .doc(target);
 
     final existingCategory = await categoryDocRef.get();
+    final existingCategoryData = existingCategory.data();
     final categoryPayload = <String, dynamic>{
       'value': target,
       'updatedAt': FieldValue.serverTimestamp(),
       'createdBy': userId,
     };
+
+    final needsOrder =
+        !existingCategory.exists ||
+        existingCategoryData == null ||
+        existingCategoryData['order'] == null;
 
     if (!existingCategory.exists) {
       final categoriesCountSnapshot =
@@ -494,6 +500,16 @@ class TicketService {
               .get();
 
       categoryPayload['label'] = targetLabel ?? target.toUpperCase();
+      categoryPayload['order'] = categoriesCountSnapshot.count ?? 0;
+    } else if (needsOrder) {
+      final categoriesCountSnapshot =
+          await firestore
+              .collection('users')
+              .doc(userId)
+              .collection('ticket_categories')
+              .count()
+              .get();
+
       categoryPayload['order'] = categoriesCountSnapshot.count ?? 0;
     }
 
@@ -514,40 +530,56 @@ class TicketService {
         }, SetOptions(merge: true));
 
     var imported = 0;
-    const chunkSize = 250;
-    for (var i = 0; i < tickers.length; i += chunkSize) {
-      final end =
-          (i + chunkSize > tickers.length) ? tickers.length : i + chunkSize;
-      final chunk = tickers.sublist(i, end);
-
-      final batch = firestore.batch();
-      for (final ticker in chunk) {
-        try {
-          final ticket = await _fetchTicketDetailsFromApi(
-            ticker,
-            idToken: idToken,
-          );
-          final payload = ticket.toJson();
-          payload['ticker'] = ticket.ticker;
-          payload['category'] = target;
-          payload['sourceCategory'] = sourceCategory;
-          payload['updatedAt'] = FieldValue.serverTimestamp();
-
-          final docRef = firestore
-              .collection('users')
-              .doc(userId)
-              .collection('ticket_lists')
-              .doc(target)
-              .collection('tickets')
-              .doc(ticket.ticker.toUpperCase());
-          batch.set(docRef, payload, SetOptions(merge: true));
-          imported += 1;
-        } catch (e) {
-          debugPrint('Import skipped for ticker $ticker: $e');
-        }
+    for (final ticker in tickers) {
+      final normalizedTicker = ticker.trim().toUpperCase();
+      if (normalizedTicker.isEmpty) {
+        continue;
       }
 
-      await batch.commit();
+      final docRef = firestore
+          .collection('users')
+          .doc(userId)
+          .collection('ticket_lists')
+          .doc(target)
+          .collection('tickets')
+          .doc(normalizedTicker);
+
+      // Always write at least a minimal ticker document so imported list appears in Firebase/UI.
+      final basePayload = <String, dynamic>{
+        'ticker': normalizedTicker,
+        'name': normalizedTicker,
+        'category': target,
+        'sourceCategory': sourceCategory,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'isPartial': true,
+      };
+
+      try {
+        final ticket = await _fetchTicketDetailsFromApi(
+          normalizedTicker,
+          idToken: idToken,
+        );
+        final payload = ticket.toJson();
+        payload['ticker'] = ticket.ticker;
+        payload['category'] = target;
+        payload['sourceCategory'] = sourceCategory;
+        payload['updatedAt'] = FieldValue.serverTimestamp();
+        payload['isPartial'] = false;
+        await docRef.set(payload, SetOptions(merge: true));
+        imported += 1;
+      } catch (e) {
+        debugPrint(
+          'Import fallback for ticker $normalizedTicker (details unavailable): $e',
+        );
+        try {
+          await docRef.set(basePayload, SetOptions(merge: true));
+          imported += 1;
+        } catch (writeError) {
+          debugPrint(
+            'Import write failed for $normalizedTicker (even fallback payload): $writeError',
+          );
+        }
+      }
     }
 
     await firestore
@@ -676,6 +708,50 @@ class TicketService {
       'updatedAt': FieldValue.serverTimestamp(),
       'updatedBy': userId,
     }, SetOptions(merge: true));
+  }
+
+  static Future<void> deleteFirebaseList({required String category}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final userId = user.uid;
+    final normalizedCategory = category.trim();
+    if (normalizedCategory.isEmpty) {
+      throw Exception('Category is empty');
+    }
+
+    final firestore = FirebaseFirestore.instance;
+    final listDocRef = firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_lists')
+        .doc(normalizedCategory);
+
+    // Delete tickets subcollection first.
+    while (true) {
+      final ticketsSnapshot =
+          await listDocRef.collection('tickets').limit(400).get();
+      if (ticketsSnapshot.docs.isEmpty) {
+        break;
+      }
+
+      final batch = firestore.batch();
+      for (final doc in ticketsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+
+    await listDocRef.delete();
+
+    await firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_categories')
+        .doc(normalizedCategory)
+        .delete();
   }
 
   static Future<void> addTickerToFirebaseList({
