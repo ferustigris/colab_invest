@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Ticket {
   final String ticker; // ticker
@@ -25,13 +26,13 @@ class Ticket {
   final double? totalDebt; // Total Debt, billions
   final double? debtEbitda; // Debt/EBITDA
   final double? cash; // Cash, B
+  final double? cashPercent; // Cash, % of Market Cap
   final double? dividend; // Div, %
   final double? peRatio; // PE
   final double? fpe; // FPE
-  final double? freeCashFlow; // free Cash flow
   final double? buyback; // buyback
   final double? buybackPercent; // buyback, %
-  final double? freeCashFlowPerStock; // free Cash flow per stock
+  final DateTime? updatedAt; // firebase cache update time
 
   // Metadata maps for comments and quality scores
   final Map<String, String> comments;
@@ -62,14 +63,14 @@ class Ticket {
     this.totalDebt,
     this.debtEbitda,
     this.cash,
+    this.cashPercent,
     this.dividend,
     this.peRatio,
     this.fpe,
     this.priceForecastFPE,
-    this.freeCashFlow,
     this.buyback,
     this.buybackPercent,
-    this.freeCashFlowPerStock,
+    this.updatedAt,
     this.comments = const {},
     this.dataQuality = const {},
     this.lastUpdates = const {},
@@ -186,6 +187,12 @@ class Ticket {
         lastUpdates,
       ),
       cash: _parseMetricValue(json['cash'], comments, dataQuality, lastUpdates),
+      cashPercent: _parseMetricValue(
+        json['cashPercent'],
+        comments,
+        dataQuality,
+        lastUpdates,
+      ),
       dividend: _parseMetricValue(
         json['dividend'],
         comments,
@@ -199,12 +206,6 @@ class Ticket {
         lastUpdates,
       ),
       fpe: _parseMetricValue(json['fpe'], comments, dataQuality, lastUpdates),
-      freeCashFlow: _parseMetricValue(
-        json['freeCashFlow'],
-        comments,
-        dataQuality,
-        lastUpdates,
-      ),
       buyback: _parseMetricValue(
         json['buyback'],
         comments,
@@ -217,12 +218,8 @@ class Ticket {
         dataQuality,
         lastUpdates,
       ),
-      freeCashFlowPerStock: _parseMetricValue(
-        json['freeCashFlowPerStock'],
-        comments,
-        dataQuality,
-        lastUpdates,
-      ),
+      updatedAt: _parseDateTimeValue(json['updatedAt']),
+
       comments: comments,
       dataQuality: dataQuality,
       lastUpdates: lastUpdates,
@@ -279,6 +276,14 @@ class Ticket {
     if (value is double) return value.toString();
     if (value is bool) return value.toString();
     return value.toString();
+  }
+
+  static DateTime? _parseDateTimeValue(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -346,16 +351,13 @@ class Ticket {
       'totalDebt': createMetricObject('totalDebt', totalDebt),
       'debtEbitda': createMetricObject('debtEbitda', debtEbitda),
       'cash': createMetricObject('cash', cash),
+      'cashPercent': createMetricObject('cashPercent', cashPercent),
       'dividend': createMetricObject('dividend', dividend),
       'peRatio': createMetricObject('peRatio', peRatio),
       'fpe': createMetricObject('fpe', fpe),
-      'freeCashFlow': createMetricObject('freeCashFlow', freeCashFlow),
       'buyback': createMetricObject('buyback', buyback),
       'buybackPercent': createMetricObject('buybackPercent', buybackPercent),
-      'freeCashFlowPerStock': createMetricObject(
-        'freeCashFlowPerStock',
-        freeCashFlowPerStock,
-      ),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 

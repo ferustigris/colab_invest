@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:portal_ux/data/models/ticket.dart';
 import 'package:portal_ux/data/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +16,8 @@ class TicketService {
 
   // Cache duration: 12 hours
   static const Duration _cacheDuration = Duration(hours: 12);
+  static const Duration _firebaseTickerFreshDuration = Duration(hours: 4);
+  static final Set<String> _refreshingTickerKeys = <String>{};
 
   // LocalStorage keys
   static const String _ticketsCacheKey = 'tickets_cache';
@@ -200,129 +203,46 @@ class TicketService {
   static Stream<List<Ticket>> getTicketsStream({
     String category = 'stocks',
   }) async* {
-    // Load cache from SharedPreferences on first access
-    if (_ticketsCache.isEmpty && _ticketDetailsCache.isEmpty) {
-      await _loadCacheFromStorage();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
     }
 
-    _clearExpiredCache();
+    final userId = user.uid;
+    final query = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_lists')
+        .doc(category)
+        .collection('tickets')
+        .orderBy('ticker');
 
-    // Check if we have valid cached data
-    if (_isCacheValid(category, _cacheTimestamps)) {
-      debugPrint(
-        'Using cached tickets for category: $category (from SharedPreferences)',
-      );
-      yield _ticketsCache[category]!;
-      return;
-    }
+    await for (final snapshot in query.snapshots()) {
+      final loadedTickets =
+          snapshot.docs
+              .map((doc) => Ticket.fromJson(doc.data()))
+              .where((ticket) => ticket.ticker.trim().isNotEmpty)
+              .toList();
 
-    List<Ticket> currentTickets = [];
-
-    try {
-      // Get current user and their token
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final idToken = await user.getIdToken();
-
-      // Step 1: Get list of tickers
-      final tickersResponse = await http.get(
-        Uri.parse('${AppConstants.cloudUrlTickets}/$category'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      );
-
-      if (tickersResponse.statusCode != 200) {
-        throw Exception(
-          'Failed to load tickers list: ${tickersResponse.statusCode}',
-        );
-      }
-
-      final List<dynamic> tickersData = json.decode(tickersResponse.body);
-      final List<String> tickers = tickersData.cast<String>();
-
-      // Step 2: For each ticker get full information and emit update
-      for (String ticker in tickers) {
-        try {
-          final ticket = await getTicketDetails(ticker);
-          currentTickets.add(ticket);
-          yield List.from(currentTickets); // Emit copy of current list
-          await Future.delayed(
-            Duration(milliseconds: 100),
-          ); // Delay for visualization
-        } catch (e) {
-          // Skip tickers with errors, but continue loading others
-          debugPrint('Failed to load $ticker: $e');
-        }
-      }
-
-      // Cache the results
-      _ticketsCache[category] = List.from(currentTickets);
+      _ticketsCache[category] = List.from(loadedTickets);
       _cacheTimestamps[category] = DateTime.now();
-      await _saveCacheToStorage();
-      debugPrint(
-        'Cached ${currentTickets.length} tickets for category: $category',
+
+      _refreshStaleTicketsInBackground(
+        userId: userId,
+        category: category,
+        docs: snapshot.docs,
       );
-    } catch (e) {
-      debugPrint('Failed to get tickers list: $e');
-      // Return empty stream if API is unavailable and no cache exists
-      if (currentTickets.isEmpty) {
-        throw Exception(
-          'Unable to load tickets: API unavailable and no cached data',
-        );
-      }
+
+      yield loadedTickets;
     }
   }
 
-  static Future<List<Ticket>> getTickets() async {
+  static Future<List<Ticket>> getTickets({String category = 'stocks'}) async {
     try {
-      // Get current user and their token
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final idToken = await user.getIdToken();
-
-      // Step 1: Get list of tickers
-      final tickersResponse = await http.get(
-        Uri.parse(AppConstants.cloudUrlTickets),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      );
-
-      if (tickersResponse.statusCode != 200) {
-        throw Exception(
-          'Failed to load tickers list: ${tickersResponse.statusCode}',
-        );
-      }
-
-      final List<dynamic> tickersData = json.decode(tickersResponse.body);
-      final List<String> tickers = tickersData.cast<String>();
-
-      // Step 2: For each ticker get full information
-      final List<Ticket> tickets = [];
-
-      for (String ticker in tickers) {
-        try {
-          final ticket = await getTicketDetails(ticker);
-          tickets.add(ticket);
-        } catch (e) {
-          // Skip tickers with errors, but continue loading others
-          // In production can use proper logging library
-        }
-      }
-
-      return tickets;
+      return await getTicketsStream(category: category).first;
     } catch (e) {
       debugPrint('Failed to get tickets: $e');
-      throw Exception('Unable to load tickets: $e');
+      throw Exception('Unable to load tickets from Firebase: $e');
     }
   }
 
@@ -344,47 +264,286 @@ class TicketService {
     }
 
     debugPrint('Calling getTicketDetails for ticker: $ticker');
-    debugPrint('URL: ${AppConstants.cloudUrlTicketDetails}/$ticker');
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        throw Exception('User not authenticated');
+      // Try Firestore-first lookup across user lists.
+      final userId = user.uid;
+      final listSnapshots =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('ticket_lists')
+              .get();
+
+      for (final listDoc in listSnapshots.docs) {
+        final ticketDoc =
+            await listDoc.reference
+                .collection('tickets')
+                .doc(ticker.toUpperCase())
+                .get();
+        if (ticketDoc.exists) {
+          final data = ticketDoc.data();
+          if (data != null) {
+            final ticket = Ticket.fromJson(data);
+            _ticketDetailsCache[ticker] = ticket;
+            _detailsCacheTimestamps[ticker] = DateTime.now();
+            _saveCacheToStorage();
+            return ticket;
+          }
+        }
       }
+    } catch (e) {
+      debugPrint('Firestore lookup for $ticker failed: $e');
+    }
 
-      final idToken = await user.getIdToken();
-
-      final response = await http.get(
-        Uri.parse('${AppConstants.cloudUrlTicketDetails}/$ticker'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-      );
-
-      debugPrint('Response status for $ticker: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        debugPrint('Successfully parsed JSON for $ticker');
-        final ticket = Ticket.fromJson(jsonData);
-
-        // Cache the result
-        _ticketDetailsCache[ticker] = ticket;
-        _detailsCacheTimestamps[ticker] = DateTime.now();
-        await _saveCacheToStorage();
-        debugPrint('Cached ticket details for: $ticker');
-
-        return ticket;
-      } else {
-        throw Exception(
-          'Failed to load ticket details for $ticker: ${response.statusCode}',
-        );
-      }
+    try {
+      final ticket = await _fetchTicketDetailsFromApi(ticker);
+      _ticketDetailsCache[ticker] = ticket;
+      _detailsCacheTimestamps[ticker] = DateTime.now();
+      await _saveCacheToStorage();
+      return ticket;
     } catch (e) {
       debugPrint('Error in getTicketDetails for $ticker: $e');
       throw Exception('Failed to get ticket details for $ticker: $e');
     }
+  }
+
+  static Future<Ticket> _fetchTicketDetailsFromApi(
+    String ticker, {
+    String? idToken,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final token = idToken ?? await user.getIdToken();
+
+    final response = await http.get(
+      Uri.parse('${AppConstants.cloudUrlTicketDetails}/$ticker'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Failed to load ticket details for $ticker: ${response.statusCode}',
+      );
+    }
+
+    final Map<String, dynamic> jsonData = json.decode(response.body);
+    return Ticket.fromJson(jsonData);
+  }
+
+  static bool _isFirebaseTicketStale(Map<String, dynamic> data) {
+    final updatedAtRaw = data['updatedAt'];
+    if (updatedAtRaw is! Timestamp) return true;
+
+    final updatedAt = updatedAtRaw.toDate();
+    return DateTime.now().difference(updatedAt) > _firebaseTickerFreshDuration;
+  }
+
+  static void _refreshStaleTicketsInBackground({
+    required String userId,
+    required String category,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  }) {
+    for (final doc in docs) {
+      final data = doc.data();
+      final ticker = (data['ticker'] as String?)?.trim();
+      if (ticker == null || ticker.isEmpty) {
+        continue;
+      }
+
+      if (!_isFirebaseTicketStale(data)) {
+        continue;
+      }
+
+      final refreshKey = '$category:${ticker.toUpperCase()}';
+      if (_refreshingTickerKeys.contains(refreshKey)) {
+        continue;
+      }
+
+      _refreshingTickerKeys.add(refreshKey);
+      _refreshSingleTicker(
+        userId: userId,
+        category: category,
+        ticker: ticker,
+      ).whenComplete(() => _refreshingTickerKeys.remove(refreshKey));
+    }
+  }
+
+  static Future<void> _refreshSingleTicker({
+    required String userId,
+    required String category,
+    required String ticker,
+  }) async {
+    try {
+      final ticket = await _fetchTicketDetailsFromApi(ticker);
+      final payload = ticket.toJson();
+      payload['ticker'] = ticket.ticker;
+      payload['category'] = category;
+      payload['updatedAt'] = FieldValue.serverTimestamp();
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('ticket_lists')
+          .doc(category)
+          .collection('tickets')
+          .doc(ticket.ticker.toUpperCase())
+          .set(payload, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Background refresh failed for $ticker in $category: $e');
+    }
+  }
+
+  static Future<void> refreshTickerFromApi({
+    required String category,
+    required String ticker,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final normalizedTicker = ticker.trim().toUpperCase();
+    if (normalizedTicker.isEmpty) {
+      throw Exception('Ticker is empty');
+    }
+
+    final refreshKey = '$category:$normalizedTicker';
+    if (_refreshingTickerKeys.contains(refreshKey)) {
+      return;
+    }
+
+    _refreshingTickerKeys.add(refreshKey);
+    try {
+      await _refreshSingleTicker(
+        userId: user.uid,
+        category: category,
+        ticker: normalizedTicker,
+      );
+    } finally {
+      _refreshingTickerKeys.remove(refreshKey);
+    }
+  }
+
+  static Future<int> importListFromApiToFirebase({
+    required String sourceCategory,
+    String? targetCategory,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final userId = user.uid;
+    final target = (targetCategory ?? sourceCategory).trim();
+    if (target.isEmpty) {
+      throw Exception('Target category is empty');
+    }
+
+    final idToken = await user.getIdToken();
+    final tickersResponse = await http.get(
+      Uri.parse('${AppConstants.cloudUrlTickets}/$sourceCategory'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      },
+    );
+
+    if (tickersResponse.statusCode != 200) {
+      throw Exception(
+        'Failed to load source tickers for $sourceCategory: ${tickersResponse.statusCode}',
+      );
+    }
+
+    final List<dynamic> tickersData = json.decode(tickersResponse.body);
+    final tickers = tickersData.cast<String>();
+
+    final firestore = FirebaseFirestore.instance;
+    await firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_categories')
+        .doc(target)
+        .set({
+          'value': target,
+          'label': target.toUpperCase(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'createdBy': userId,
+        }, SetOptions(merge: true));
+
+    await firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_lists')
+        .doc(target)
+        .set({
+          'category': target,
+          'sourceCategory': sourceCategory,
+          'importedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'updatedBy': userId,
+          'itemsCount': tickers.length,
+        }, SetOptions(merge: true));
+
+    var imported = 0;
+    const chunkSize = 250;
+    for (var i = 0; i < tickers.length; i += chunkSize) {
+      final end =
+          (i + chunkSize > tickers.length) ? tickers.length : i + chunkSize;
+      final chunk = tickers.sublist(i, end);
+
+      final batch = firestore.batch();
+      for (final ticker in chunk) {
+        try {
+          final ticket = await _fetchTicketDetailsFromApi(
+            ticker,
+            idToken: idToken,
+          );
+          final payload = ticket.toJson();
+          payload['ticker'] = ticket.ticker;
+          payload['category'] = target;
+          payload['sourceCategory'] = sourceCategory;
+          payload['updatedAt'] = FieldValue.serverTimestamp();
+
+          final docRef = firestore
+              .collection('users')
+              .doc(userId)
+              .collection('ticket_lists')
+              .doc(target)
+              .collection('tickets')
+              .doc(ticket.ticker.toUpperCase());
+          batch.set(docRef, payload, SetOptions(merge: true));
+          imported += 1;
+        } catch (e) {
+          debugPrint('Import skipped for ticker $ticker: $e');
+        }
+      }
+
+      await batch.commit();
+    }
+
+    await firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_lists')
+        .doc(target)
+        .set({
+          'itemsCount': imported,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+    return imported;
   }
 
   static Future<Ticket> createTicket(Ticket ticket) async {

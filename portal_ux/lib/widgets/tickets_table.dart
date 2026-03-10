@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:portal_ux/data/models/ticket.dart';
@@ -5,6 +6,7 @@ import 'package:portal_ux/data/services/ticket_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class TicketsTable extends StatefulWidget {
@@ -16,27 +18,207 @@ class TicketsTable extends StatefulWidget {
 }
 
 class _TicketsTableState extends State<TicketsTable> {
+  static const List<Map<String, String>> _fallbackCategories = [
+    {'value': 'stocks', 'label': 'Stocks'},
+    {'value': 'current', 'label': 'Current'},
+    {'value': 'default', 'label': 'Default'},
+    // {'value': 'nyse', 'label': 'NYSE'},
+    // {'value': 'eu', 'label': 'Europe'},
+  ];
+
+  static const List<Map<String, String>> _apiImportSources = [
+    {'value': 'stocks', 'label': 'Stocks (API)'},
+    {'value': 'current', 'label': 'Current (API)'},
+    {'value': 'default', 'label': 'Default (API)'},
+  ];
+
   List<Ticket> tickets = [];
   bool isLoading = true;
+  bool isCategoriesLoading = true;
   String? errorMessage;
   int? sortColumnIndex;
   bool isAscending = true;
   String searchQuery = '';
   int loadedCount = 0;
   String selectedCategory = 'stocks';
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+  _categoriesSubscription;
+  bool _isSeedingUserCategories = false;
+  bool _isUploadingListToFirestore = false;
+  final Set<String> _refreshingTickers = <String>{};
 
-  final List<Map<String, String>> categories = [
-    {'value': 'default', 'label': '� Default'},
-    {'value': 'nyse', 'label': '🏢 NYSE'},
-    {'value': 'eu', 'label': '🇪🇺 Europe'},
-    {'value': 'current', 'label': '⚡ Current'},
-  ];
+  List<Map<String, String>> categories = List.from(_fallbackCategories);
+
+  List<Map<String, String>> _normalizeCategories(
+    List<Map<String, String>> source,
+  ) {
+    final seenValues = <String>{};
+    final normalized = <Map<String, String>>[];
+
+    for (final category in source) {
+      final value = (category['value'] ?? '').trim();
+      final label = (category['label'] ?? '').trim();
+
+      if (value.isEmpty || label.isEmpty || seenValues.contains(value)) {
+        continue;
+      }
+
+      seenValues.add(value);
+      normalized.add({'value': value, 'label': label});
+    }
+
+    if (normalized.isEmpty) {
+      return List.from(_fallbackCategories);
+    }
+
+    return normalized;
+  }
+
+  String _resolveValidCategory(
+    String preferred,
+    List<Map<String, String>> available,
+  ) {
+    if (available.any((category) => category['value'] == preferred)) {
+      return preferred;
+    }
+
+    return available.first['value']!;
+  }
 
   @override
   void initState() {
     super.initState();
-    selectedCategory = widget.category;
+    final fallback = _normalizeCategories(List.from(_fallbackCategories));
+    selectedCategory = _resolveValidCategory(widget.category, fallback);
+    _subscribeToCategories();
     _loadTicketsStream();
+  }
+
+  @override
+  void dispose() {
+    _categoriesSubscription?.cancel();
+    super.dispose();
+  }
+
+  CollectionReference<Map<String, dynamic>>? _userCategoriesCollection() {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null || userId.isEmpty) return null;
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_categories');
+  }
+
+  Future<void> _seedUserCategoriesIfNeeded(
+    CollectionReference<Map<String, dynamic>> categoriesRef,
+    String userId,
+  ) async {
+    if (_isSeedingUserCategories) return;
+    _isSeedingUserCategories = true;
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (var i = 0; i < _fallbackCategories.length; i++) {
+        final category = _fallbackCategories[i];
+        final value = category['value']!;
+        final label = category['label']!;
+
+        batch.set(categoriesRef.doc(value), {
+          'value': value,
+          'label': label,
+          'order': i,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'createdBy': userId,
+        }, SetOptions(merge: true));
+      }
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Failed to seed user categories: $e');
+    } finally {
+      _isSeedingUserCategories = false;
+    }
+  }
+
+  void _subscribeToCategories() {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final categoriesRef = _userCategoriesCollection();
+
+    if (userId == null || categoriesRef == null) {
+      setState(() {
+        categories = _normalizeCategories(List.from(_fallbackCategories));
+        selectedCategory = _resolveValidCategory(selectedCategory, categories);
+        isCategoriesLoading = false;
+      });
+      return;
+    }
+
+    _categoriesSubscription = categoriesRef
+        .orderBy('order')
+        .snapshots()
+        .listen(
+          (snapshot) {
+            final loadedCategories =
+                snapshot.docs
+                    .map((doc) => doc.data())
+                    .where(
+                      (data) =>
+                          (data['value'] as String?)?.trim().isNotEmpty ==
+                              true &&
+                          (data['label'] as String?)?.trim().isNotEmpty == true,
+                    )
+                    .map(
+                      (data) => {
+                        'value': (data['value'] as String).trim(),
+                        'label': (data['label'] as String).trim(),
+                      },
+                    )
+                    .toList();
+
+            if (loadedCategories.isEmpty) {
+              _seedUserCategoriesIfNeeded(categoriesRef, userId);
+            }
+
+            if (!mounted) return;
+
+            setState(() {
+              categories = _normalizeCategories(
+                loadedCategories.isEmpty
+                    ? List.from(_fallbackCategories)
+                    : loadedCategories,
+              );
+
+              if (!categories.any((c) => c['value'] == selectedCategory)) {
+                _uploadListSnapshotToFirebase(
+                  category: selectedCategory,
+                  ticketsSnapshot: List<Ticket>.from(tickets),
+                  silent: true,
+                );
+                selectedCategory = categories.first['value']!;
+                _loadTicketsStream();
+              }
+
+              isCategoriesLoading = false;
+            });
+          },
+          onError: (error) {
+            debugPrint(
+              'Failed to load ticket categories from Firestore: $error',
+            );
+
+            if (!mounted) return;
+            setState(() {
+              categories = _normalizeCategories(List.from(_fallbackCategories));
+              selectedCategory = _resolveValidCategory(
+                selectedCategory,
+                categories,
+              );
+              isCategoriesLoading = false;
+            });
+          },
+        );
   }
 
   void _loadTicketsStream() {
@@ -73,8 +255,89 @@ class _TicketsTableState extends State<TicketsTable> {
         setState(() {
           isLoading = false;
         });
+
+        _uploadListSnapshotToFirebase(
+          category: selectedCategory,
+          ticketsSnapshot: List<Ticket>.from(tickets),
+          silent: true,
+        );
       },
     );
+  }
+
+  Future<void> _uploadListSnapshotToFirebase({
+    required String category,
+    required List<Ticket> ticketsSnapshot,
+    bool silent = false,
+  }) async {
+    if (_isUploadingListToFirestore) return;
+    if (ticketsSnapshot.isEmpty) return;
+
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null || userId.isEmpty) return;
+
+    _isUploadingListToFirestore = true;
+
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final listDocRef = firestore
+          .collection('users')
+          .doc(userId)
+          .collection('ticket_lists')
+          .doc(category);
+      final ticketsRef = listDocRef.collection('tickets');
+
+      await listDocRef.set({
+        'category': category,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'itemsCount': ticketsSnapshot.length,
+        'updatedBy': userId,
+      }, SetOptions(merge: true));
+
+      const chunkSize = 400;
+      for (var i = 0; i < ticketsSnapshot.length; i += chunkSize) {
+        final end =
+            (i + chunkSize > ticketsSnapshot.length)
+                ? ticketsSnapshot.length
+                : i + chunkSize;
+        final chunk = ticketsSnapshot.sublist(i, end);
+
+        final batch = firestore.batch();
+        for (final ticket in chunk) {
+          final ticketDocRef = ticketsRef.doc(ticket.ticker.toUpperCase());
+          final ticketData = ticket.toJson();
+          ticketData['ticker'] = ticket.ticker;
+          ticketData['category'] = category;
+          ticketData['updatedAt'] = FieldValue.serverTimestamp();
+          batch.set(ticketDocRef, ticketData, SetOptions(merge: true));
+        }
+        await batch.commit();
+      }
+
+      if (!silent && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'List "$category" migrated to Firebase (${ticketsSnapshot.length} items)',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Failed to migrate list "$category" to Firebase: $e');
+
+      if (!silent && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to migrate list "$category": $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      _isUploadingListToFirestore = false;
+    }
   }
 
   Future<void> _loadTickets() async {
@@ -93,6 +356,291 @@ class _TicketsTableState extends State<TicketsTable> {
       setState(() {
         errorMessage = e.toString();
         isLoading = false;
+      });
+    }
+  }
+
+  void _showCreateCollectionDialog() {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController labelController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Create New Collection'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Collection name (latin)',
+                    hintText: 'e.g.: tech_stocks',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: labelController,
+                  decoration: InputDecoration(
+                    labelText: 'Display name',
+                    hintText: 'e.g.: 🚀 Tech Stocks',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Collection will be created as collection_[name].json',
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                final label = labelController.text.trim();
+
+                if (name.isNotEmpty && label.isNotEmpty) {
+                  _createNewCollection(name, label);
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Fill all fields')));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Create'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _createNewCollection(String name, String label) async {
+    final normalizedName = name.toLowerCase().replaceAll(' ', '_');
+    final categoryExists = categories.any(
+      (category) => category['value'] == normalizedName,
+    );
+
+    if (categoryExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Collection with this name already exists'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+      final categoriesRef = _userCategoriesCollection();
+
+      if (categoriesRef == null) {
+        throw Exception('User not authenticated');
+      }
+
+      await categoriesRef.doc(normalizedName).set({
+        'value': normalizedName,
+        'label': label,
+        'order': categories.length,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'createdBy': userId,
+      }, SetOptions(merge: true));
+
+      if (!mounted) return;
+
+      setState(() {
+        selectedCategory = normalizedName;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Collection "$label" created for your account'),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      _loadTicketsStream();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create collection: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showImportListDialog() {
+    String selectedSource = _apiImportSources.first['value']!;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              title: const Text('Import List From API'),
+              content: SizedBox(
+                width: 380,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Target Firebase list: $selectedCategory',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedSource,
+                      decoration: const InputDecoration(
+                        labelText: 'Source API list',
+                        border: OutlineInputBorder(),
+                      ),
+                      items:
+                          _apiImportSources.map((source) {
+                            return DropdownMenuItem<String>(
+                              value: source['value'],
+                              child: Text(source['label']!),
+                            );
+                          }).toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setLocalState(() {
+                          selectedSource = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'This will import tickers and cached ticker data to Firebase.',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await _importListFromApi(selectedSource);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Import'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _importListFromApi(String sourceCategory) async {
+    try {
+      final importedCount = await TicketService.importListFromApiToFirebase(
+        sourceCategory: sourceCategory,
+        targetCategory: selectedCategory,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Imported $importedCount tickers from "$sourceCategory" to "$selectedCategory"',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      _loadTicketsStream();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Import failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  bool _isTickerStale(Ticket ticket) {
+    if (ticket.updatedAt == null) {
+      return true;
+    }
+
+    return DateTime.now().difference(ticket.updatedAt!) >
+        const Duration(hours: 1);
+  }
+
+  Future<void> _refreshTickerRow(Ticket ticket) async {
+    final ticker = ticket.ticker.toUpperCase();
+    if (_refreshingTickers.contains(ticker)) return;
+
+    setState(() {
+      _refreshingTickers.add(ticker);
+    });
+
+    try {
+      await TicketService.refreshTickerFromApi(
+        category: selectedCategory,
+        ticker: ticker,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ticker $ticker updated'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update $ticker: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _refreshingTickers.remove(ticker);
       });
     }
   }
@@ -208,9 +756,9 @@ class _TicketsTableState extends State<TicketsTable> {
             aValue = a.fpe ?? 0;
             bValue = b.fpe ?? 0;
             break;
-          case 18: // Free Cash Flow per Stock
-            aValue = a.freeCashFlowPerStock ?? 0;
-            bValue = b.freeCashFlowPerStock ?? 0;
+          case 18: // Cash
+            aValue = a.cashPercent ?? 0;
+            bValue = b.cashPercent ?? 0;
             break;
           case 19: // Buyback Percent
             aValue = a.buybackPercent ?? 0;
@@ -272,12 +820,12 @@ class _TicketsTableState extends State<TicketsTable> {
     }
 
     // Green for 0-10
-    if (pe >= 0 && pe <= 10) {
+    if (pe >= 0 && pe <= 8.5) {
       return Colors.green;
     }
 
     // Yellow for 10-15
-    if (pe > 10 && pe <= 15) {
+    if (pe > 8.5 && pe <= 15) {
       return Colors.orange;
     }
 
@@ -293,16 +841,16 @@ class _TicketsTableState extends State<TicketsTable> {
     final ratio = currentPrice / forecast;
 
     // Green: value less than current price by 20% (less than 80%)
-    if (ratio < 0.9 && ratio > 0) {
+    if (ratio < 0.8 && ratio > 0) {
       return Colors.green;
     }
 
-    // Yellow: value between 80% and 150% of current price
-    if (ratio >= 0.9 && ratio <= 1.2) {
+    // Yellow: value between 80% and 105% of current price
+    if (ratio >= 0.8 && ratio <= 1.05) {
       return Colors.orange;
     }
 
-    // Red in other cases (more than 150%)
+    // Red in other cases (more than 105%)
     return Colors.red;
   }
 
@@ -370,97 +918,160 @@ class _TicketsTableState extends State<TicketsTable> {
 
     return Column(
       children: [
-        // Search Bar with Category Dropdown
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              // Category Dropdown
-              Container(
-                height: 48,
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[400]!),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: DropdownButton<String>(
-                  value: selectedCategory,
-                  underline: SizedBox.shrink(),
-                  icon: Icon(Icons.arrow_drop_down, size: 20),
-                  style: TextStyle(fontSize: 12, color: Colors.black87),
-                  items:
-                      categories.map((category) {
-                        return DropdownMenuItem<String>(
-                          value: category['value'],
-                          child: Text(
-                            category['label']!,
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    if (value != null && value != selectedCategory) {
-                      setState(() {
-                        selectedCategory = value;
-                      });
-                      _loadTicketsStream();
-                    }
-                  },
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Search...',
-                    prefixIcon: Icon(Icons.search, size: 20),
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+        // Keep DropdownButton value aligned with rendered items.
+        ...(() {
+          final dropdownCategories = _normalizeCategories(categories);
+          final dropdownValue = _resolveValidCategory(
+            selectedCategory,
+            dropdownCategories,
+          );
+
+          return [
+            // Search Bar with Category Dropdown
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  // Category Dropdown
+                  Container(
+                    height: 48,
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[400]!),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    labelStyle: TextStyle(fontSize: 12),
+                    child: DropdownButton<String>(
+                      value: dropdownValue,
+                      underline: SizedBox.shrink(),
+                      icon: Icon(Icons.arrow_drop_down, size: 20),
+                      style: TextStyle(fontSize: 12, color: Colors.black87),
+                      items: [
+                        ...dropdownCategories.map((category) {
+                          return DropdownMenuItem<String>(
+                            value: category['value'],
+                            child: Text(
+                              category['label']!,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          );
+                        }),
+                        DropdownMenuItem<String>(
+                          value: '__import_list__',
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.upload_file,
+                                size: 14,
+                                color: Colors.deepPurple,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Import List',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.deepPurple,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '__create_new__',
+                          child: Row(
+                            children: [
+                              Icon(Icons.add, size: 14, color: Colors.green),
+                              SizedBox(width: 4),
+                              Text(
+                                'Create New',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onChanged:
+                          isCategoriesLoading
+                              ? null
+                              : (value) {
+                                if (value == '__create_new__') {
+                                  _showCreateCollectionDialog();
+                                } else if (value == '__import_list__') {
+                                  _showImportListDialog();
+                                } else if (value != null &&
+                                    value != dropdownValue) {
+                                  _uploadListSnapshotToFirebase(
+                                    category: selectedCategory,
+                                    ticketsSnapshot: List<Ticket>.from(tickets),
+                                    silent: true,
+                                  );
+                                  setState(() {
+                                    selectedCategory = value;
+                                  });
+                                  _loadTicketsStream();
+                                }
+                              },
+                    ),
                   ),
-                  style: TextStyle(fontSize: 12),
-                  onChanged: (value) {
-                    setState(() {
-                      searchQuery = value;
-                    });
-                  },
-                ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Search...',
+                        prefixIcon: Icon(Icons.search, size: 20),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        labelStyle: TextStyle(fontSize: 12),
+                      ),
+                      style: TextStyle(fontSize: 12),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed:
+                        isLoading
+                            ? null
+                            : () async {
+                              await TicketService.clearAllCache();
+                              _loadTicketsStream();
+                            },
+                    icon:
+                        isLoading
+                            ? SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : Icon(Icons.refresh, size: 16),
+                    label: Text(
+                      isLoading && tickets.isNotEmpty
+                          ? 'Loading $loadedCount...'
+                          : 'Refresh',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed:
-                    isLoading
-                        ? null
-                        : () async {
-                          await TicketService.clearAllCache();
-                          _loadTicketsStream();
-                        },
-                icon:
-                    isLoading
-                        ? SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : Icon(Icons.refresh, size: 16),
-                label: Text(
-                  isLoading && tickets.isNotEmpty
-                      ? 'Loading $loadedCount...'
-                      : 'Refresh',
-                  style: TextStyle(fontSize: 11),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          ];
+        })(),
 
         // Cache status info with table summary
         Padding(
@@ -742,7 +1353,20 @@ class _TicketsTableState extends State<TicketsTable> {
                 ],
                 rows:
                     filteredTickets.map((ticket) {
+                      final isStale = _isTickerStale(ticket);
+                      final isRefreshing = _refreshingTickers.contains(
+                        ticket.ticker.toUpperCase(),
+                      );
+
                       return DataRow(
+                        color: WidgetStateProperty.resolveWith<Color?>((
+                          states,
+                        ) {
+                          if (isStale) {
+                            return Colors.orange.withValues(alpha: 0.10);
+                          }
+                          return null;
+                        }),
                         onSelectChanged: (selected) {
                           if (selected == true) {
                             _showTicketDetails(ticket);
@@ -754,7 +1378,8 @@ class _TicketsTableState extends State<TicketsTable> {
                               ticket.ticker,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue,
+                                color:
+                                    isStale ? Colors.deepOrange : Colors.blue,
                                 fontSize: 12,
                               ),
                             ),
@@ -1177,14 +1802,14 @@ class _TicketsTableState extends State<TicketsTable> {
                           _buildDataCellWithTooltip(
                             child: Text(
                               _formatNumber(
-                                ticket.freeCashFlowPerStock,
-                                decimals: 1,
+                                (ticket.cashPercent ?? 0) * 100,
+                                decimals: 2,
                                 suffix: '%',
                               ),
                               style: TextStyle(fontSize: 12),
                             ),
                             ticket: ticket,
-                            metricName: 'freeCashFlowPerStock',
+                            metricName: 'cash',
                           ),
                           _buildDataCellWithTooltip(
                             child: Text(
@@ -1214,6 +1839,38 @@ class _TicketsTableState extends State<TicketsTable> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                IconButton(
+                                  icon:
+                                      isRefreshing
+                                          ? const SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                          : Icon(
+                                            Icons.refresh,
+                                            size: 14,
+                                            color:
+                                                isStale
+                                                    ? Colors.deepOrange
+                                                    : Colors.green,
+                                          ),
+                                  onPressed:
+                                      isRefreshing
+                                          ? null
+                                          : () => _refreshTickerRow(ticket),
+                                  tooltip:
+                                      isStale
+                                          ? 'Refresh stale cache'
+                                          : 'Refresh ticker cache',
+                                  padding: const EdgeInsets.all(2),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 20,
+                                    minHeight: 20,
+                                  ),
+                                ),
                                 IconButton(
                                   icon: Icon(
                                     Icons.analytics,
@@ -1372,7 +2029,7 @@ class _TicketsTableState extends State<TicketsTable> {
           ticket.priceForecastFPE,
           ticket.priceForecastEquity,
           ticket.priceForecastDivBuyback,
-        ].where((value) => value != null && value! > 0).cast<double>().toList();
+        ].whereType<double>().where((value) => value > 0).toList();
 
     if (forecasts.isEmpty) return null;
 
