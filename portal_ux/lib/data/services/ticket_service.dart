@@ -439,6 +439,7 @@ class TicketService {
   static Future<int> importListFromApiToFirebase({
     required String sourceCategory,
     String? targetCategory,
+    String? targetLabel,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -470,17 +471,33 @@ class TicketService {
     final tickers = tickersData.cast<String>();
 
     final firestore = FirebaseFirestore.instance;
-    await firestore
+    final categoryDocRef = firestore
         .collection('users')
         .doc(userId)
         .collection('ticket_categories')
-        .doc(target)
-        .set({
-          'value': target,
-          'label': target.toUpperCase(),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'createdBy': userId,
-        }, SetOptions(merge: true));
+        .doc(target);
+
+    final existingCategory = await categoryDocRef.get();
+    final categoryPayload = <String, dynamic>{
+      'value': target,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'createdBy': userId,
+    };
+
+    if (!existingCategory.exists) {
+      final categoriesCountSnapshot =
+          await firestore
+              .collection('users')
+              .doc(userId)
+              .collection('ticket_categories')
+              .count()
+              .get();
+
+      categoryPayload['label'] = targetLabel ?? target.toUpperCase();
+      categoryPayload['order'] = categoriesCountSnapshot.count ?? 0;
+    }
+
+    await categoryDocRef.set(categoryPayload, SetOptions(merge: true));
 
     await firestore
         .collection('users')
@@ -625,5 +642,81 @@ class TicketService {
     } catch (e) {
       throw Exception('Failed to delete ticket: $e');
     }
+  }
+
+  static Future<void> deleteTickerFromFirebaseList({
+    required String category,
+    required String ticker,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final userId = user.uid;
+    final normalizedTicker = ticker.trim().toUpperCase();
+    if (normalizedTicker.isEmpty) {
+      throw Exception('Ticker is empty');
+    }
+
+    final firestore = FirebaseFirestore.instance;
+    final listDocRef = firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_lists')
+        .doc(category);
+
+    final tickerDocRef = listDocRef.collection('tickets').doc(normalizedTicker);
+
+    await tickerDocRef.delete();
+
+    final countSnapshot = await listDocRef.collection('tickets').count().get();
+    await listDocRef.set({
+      'itemsCount': countSnapshot.count ?? 0,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedBy': userId,
+    }, SetOptions(merge: true));
+  }
+
+  static Future<void> addTickerToFirebaseList({
+    required String category,
+    required String ticker,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final userId = user.uid;
+    final normalizedTicker = ticker.trim().toUpperCase();
+    if (normalizedTicker.isEmpty) {
+      throw Exception('Ticker is empty');
+    }
+
+    final ticket = await _fetchTicketDetailsFromApi(normalizedTicker);
+    final payload = ticket.toJson();
+    payload['ticker'] = ticket.ticker;
+    payload['category'] = category;
+    payload['updatedAt'] = FieldValue.serverTimestamp();
+
+    final firestore = FirebaseFirestore.instance;
+    final listDocRef = firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ticket_lists')
+        .doc(category);
+
+    await listDocRef
+        .collection('tickets')
+        .doc(normalizedTicker)
+        .set(payload, SetOptions(merge: true));
+
+    final countSnapshot = await listDocRef.collection('tickets').count().get();
+    await listDocRef.set({
+      'category': category,
+      'itemsCount': countSnapshot.count ?? 0,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedBy': userId,
+    }, SetOptions(merge: true));
   }
 }

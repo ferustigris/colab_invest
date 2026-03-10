@@ -19,17 +19,15 @@ class TicketsTable extends StatefulWidget {
 
 class _TicketsTableState extends State<TicketsTable> {
   static const List<Map<String, String>> _fallbackCategories = [
-    {'value': 'stocks', 'label': 'Stocks'},
-    {'value': 'current', 'label': 'Current'},
     {'value': 'default', 'label': 'Default'},
-    // {'value': 'nyse', 'label': 'NYSE'},
-    // {'value': 'eu', 'label': 'Europe'},
   ];
 
   static const List<Map<String, String>> _apiImportSources = [
-    {'value': 'stocks', 'label': 'Stocks (API)'},
+    {'value': 'berkshire', 'label': 'Berkshire Hathaway'},
     {'value': 'current', 'label': 'Current (API)'},
-    {'value': 'default', 'label': 'Default (API)'},
+    {'value': 'default', 'label': 'Default'},
+    {'value': 'nyse', 'label': 'NYSE'},
+    {'value': 'eu', 'label': 'Europe'},
   ];
 
   List<Ticket> tickets = [];
@@ -43,9 +41,14 @@ class _TicketsTableState extends State<TicketsTable> {
   String selectedCategory = 'stocks';
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
   _categoriesSubscription;
+  StreamSubscription<List<Ticket>>? _ticketsSubscription;
   bool _isSeedingUserCategories = false;
   bool _isUploadingListToFirestore = false;
+  bool _isAddingTicker = false;
   final Set<String> _refreshingTickers = <String>{};
+  final Set<String> _analyticsInactiveTickers = <String>{};
+  final Set<String> _deletingTickers = <String>{};
+  final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, String>> categories = List.from(_fallbackCategories);
 
@@ -97,7 +100,19 @@ class _TicketsTableState extends State<TicketsTable> {
   @override
   void dispose() {
     _categoriesSubscription?.cancel();
+    _ticketsSubscription?.cancel();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  String get _normalizedSearchTicker => searchQuery.trim().toUpperCase();
+
+  bool get _canAddTickerFromSearch {
+    final ticker = _normalizedSearchTicker;
+    if (ticker.isEmpty) return false;
+    if (_isAddingTicker || isLoading) return false;
+
+    return !tickets.any((ticket) => ticket.ticker.toUpperCase() == ticker);
   }
 
   CollectionReference<Map<String, dynamic>>? _userCategoriesCollection() {
@@ -222,6 +237,8 @@ class _TicketsTableState extends State<TicketsTable> {
   }
 
   void _loadTicketsStream() {
+    _ticketsSubscription?.cancel();
+
     setState(() {
       isLoading = true;
       errorMessage = null;
@@ -229,10 +246,17 @@ class _TicketsTableState extends State<TicketsTable> {
       loadedCount = 0;
     });
 
-    TicketService.getTicketsStream(category: selectedCategory).listen(
+    _ticketsSubscription = TicketService.getTicketsStream(
+      category: selectedCategory,
+    ).listen(
       (ticketsList) {
+        if (!mounted) return;
         debugPrint('Stream update received: ${ticketsList.length} tickets');
         setState(() {
+          if (isLoading) {
+            isLoading = false;
+          }
+
           // Add only new tickets (last element)
           if (ticketsList.length > tickets.length) {
             final newTickets = ticketsList.sublist(tickets.length);
@@ -242,16 +266,22 @@ class _TicketsTableState extends State<TicketsTable> {
             }
             tickets.addAll(newTickets);
             loadedCount = tickets.length;
+          } else if (ticketsList.length < tickets.length) {
+            // Handle deletions or list replacement from Firestore.
+            tickets = List<Ticket>.from(ticketsList);
+            loadedCount = tickets.length;
           }
         });
       },
       onError: (error) {
+        if (!mounted) return;
         setState(() {
           errorMessage = error.toString();
           isLoading = false;
         });
       },
       onDone: () {
+        if (!mounted) return;
         setState(() {
           isLoading = false;
         });
@@ -511,9 +541,9 @@ class _TicketsTableState extends State<TicketsTable> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Target Firebase list: $selectedCategory',
-                      style: const TextStyle(fontSize: 12),
+                    const Text(
+                      'Import creates/updates a dedicated Firebase list matching selected source.',
+                      style: TextStyle(fontSize: 12),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
@@ -572,15 +602,24 @@ class _TicketsTableState extends State<TicketsTable> {
     try {
       final importedCount = await TicketService.importListFromApiToFirebase(
         sourceCategory: sourceCategory,
-        targetCategory: selectedCategory,
+        targetCategory: sourceCategory,
+        targetLabel:
+            _apiImportSources.firstWhere(
+              (source) => source['value'] == sourceCategory,
+              orElse: () => {'label': sourceCategory.toUpperCase()},
+            )['label'],
       );
 
       if (!mounted) return;
 
+      setState(() {
+        selectedCategory = sourceCategory;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Imported $importedCount tickers from "$sourceCategory" to "$selectedCategory"',
+            'Imported $importedCount tickers into list "$sourceCategory"',
           ),
           backgroundColor: Colors.green,
         ),
@@ -641,6 +680,100 @@ class _TicketsTableState extends State<TicketsTable> {
       if (!mounted) return;
       setState(() {
         _refreshingTickers.remove(ticker);
+      });
+    }
+  }
+
+  Future<void> _addTickerFromSearch() async {
+    if (!_canAddTickerFromSearch) return;
+
+    final ticker = _normalizedSearchTicker;
+    setState(() {
+      _isAddingTicker = true;
+    });
+
+    try {
+      await TicketService.addTickerToFirebaseList(
+        category: selectedCategory,
+        ticker: ticker,
+      );
+
+      if (!mounted) return;
+      _searchController.clear();
+      setState(() {
+        searchQuery = '';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$ticker added to "$selectedCategory"'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add ticker: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isAddingTicker = false;
+      });
+    }
+  }
+
+  bool _isAnalyticsActive(Ticket ticket) {
+    return !_analyticsInactiveTickers.contains(ticket.ticker.toUpperCase());
+  }
+
+  void _toggleAnalyticsState(Ticket ticket) {
+    final ticker = ticket.ticker.toUpperCase();
+    setState(() {
+      if (_analyticsInactiveTickers.contains(ticker)) {
+        _analyticsInactiveTickers.remove(ticker);
+      } else {
+        _analyticsInactiveTickers.add(ticker);
+      }
+    });
+  }
+
+  Future<void> _deleteTickerFromCurrentList(Ticket ticket) async {
+    final ticker = ticket.ticker.toUpperCase();
+    if (_deletingTickers.contains(ticker)) return;
+
+    setState(() {
+      _deletingTickers.add(ticker);
+    });
+
+    try {
+      await TicketService.deleteTickerFromFirebaseList(
+        category: selectedCategory,
+        ticker: ticker,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$ticker deleted from list "$selectedCategory"'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete $ticker: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _deletingTickers.remove(ticker);
       });
     }
   }
@@ -1020,6 +1153,7 @@ class _TicketsTableState extends State<TicketsTable> {
                   SizedBox(width: 8),
                   Expanded(
                     child: TextField(
+                      controller: _searchController,
                       decoration: InputDecoration(
                         labelText: 'Search...',
                         prefixIcon: Icon(Icons.search, size: 20),
@@ -1036,6 +1170,28 @@ class _TicketsTableState extends State<TicketsTable> {
                           searchQuery = value;
                         });
                       },
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed:
+                        _canAddTickerFromSearch ? _addTickerFromSearch : null,
+                    icon:
+                        _isAddingTicker
+                            ? const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Icon(Icons.add, size: 16),
+                    label: const Text('Add', style: TextStyle(fontSize: 11)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                     ),
                   ),
                   SizedBox(width: 8),
@@ -1357,6 +1513,10 @@ class _TicketsTableState extends State<TicketsTable> {
                       final isRefreshing = _refreshingTickers.contains(
                         ticket.ticker.toUpperCase(),
                       );
+                      final isDeleting = _deletingTickers.contains(
+                        ticket.ticker.toUpperCase(),
+                      );
+                      final analyticsActive = _isAnalyticsActive(ticket);
 
                       return DataRow(
                         color: WidgetStateProperty.resolveWith<Color?>((
@@ -1873,12 +2033,21 @@ class _TicketsTableState extends State<TicketsTable> {
                                 ),
                                 IconButton(
                                   icon: Icon(
-                                    Icons.analytics,
+                                    analyticsActive
+                                        ? Icons.analytics
+                                        : Icons.analytics_outlined,
                                     size: 14,
-                                    color: Colors.blue,
+                                    color:
+                                        analyticsActive
+                                            ? Colors.blue
+                                            : Colors.grey,
                                   ),
-                                  onPressed: () => _showAnalytics(ticket),
-                                  tooltip: 'Analytics',
+                                  onPressed:
+                                      () => _toggleAnalyticsState(ticket),
+                                  tooltip:
+                                      analyticsActive
+                                          ? 'Analytics active (click to exclude from summary)'
+                                          : 'Analytics inactive (click to include in summary)',
                                   padding: EdgeInsets.all(2),
                                   constraints: BoxConstraints(
                                     minWidth: 20,
@@ -1886,15 +2055,30 @@ class _TicketsTableState extends State<TicketsTable> {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: Icon(
-                                    Icons.favorite_border,
-                                    size: 14,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () => _addToWatchlist(ticket),
-                                  tooltip: 'Watchlist',
-                                  padding: EdgeInsets.all(2),
-                                  constraints: BoxConstraints(
+                                  icon:
+                                      isDeleting
+                                          ? const SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                          : const Icon(
+                                            Icons.delete_outline,
+                                            size: 14,
+                                            color: Colors.red,
+                                          ),
+                                  onPressed:
+                                      isDeleting
+                                          ? null
+                                          : () => _deleteTickerFromCurrentList(
+                                            ticket,
+                                          ),
+                                  tooltip:
+                                      'Delete ticker from current Firebase list',
+                                  padding: const EdgeInsets.all(2),
+                                  constraints: const BoxConstraints(
                                     minWidth: 20,
                                     minHeight: 20,
                                   ),
@@ -1920,18 +2104,6 @@ class _TicketsTableState extends State<TicketsTable> {
     );
   }
 
-  void _showAnalytics(Ticket ticket) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Analytics for ${ticket.ticker} coming soon...')),
-    );
-  }
-
-  void _addToWatchlist(Ticket ticket) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${ticket.ticker} added to watchlist!')),
-    );
-  }
-
   String _getCacheStatusText() {
     final status = TicketService.getCacheStatus();
     return 'Cache: ${status['ticketsCache']} lists, ${status['detailsCache']} details (${status['cacheDuration']}min TTL)';
@@ -1943,9 +2115,15 @@ class _TicketsTableState extends State<TicketsTable> {
     final filtered = filteredTickets;
     if (filtered.isEmpty) return 'No data';
 
+    final analyticsTickets =
+        filtered.where((ticket) => _isAnalyticsActive(ticket)).toList();
+    if (analyticsTickets.isEmpty) {
+      return 'Summary disabled: all visible tickers are excluded from analytics';
+    }
+
     try {
-      final summary = _calculateTableSummary(filtered);
-      return 'Expected Growth: ${summary['expectedGrowth']}% | Avg Dividend: ${summary['avgDividend']}% | Avg P/E: ${summary['avgPE']}';
+      final summary = _calculateTableSummary(analyticsTickets);
+      return 'Expected Growth: ${summary['expectedGrowth']}% | Avg Dividend: ${summary['avgDividend']}% | Avg P/E: ${summary['avgPE']} | Analytics tickers: ${analyticsTickets.length}/${filtered.length}';
     } catch (e) {
       debugPrint('Error calculating table summary: $e');
       return 'Summary unavailable';
