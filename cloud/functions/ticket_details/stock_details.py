@@ -22,6 +22,7 @@ from metrics.cash import Cash
 from metrics.dividend import Dividend
 from metrics.buyback import Buyback
 from metrics.buyback_percent import BuybackPercent
+from metrics.cash_percent import CashPercent
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class StockDetails:
         self.dividend = Dividend(self, data)
         self.buyback = Buyback(self, data)
         self.buyback_percent = BuybackPercent(self, data)
+        self.cash_percent = CashPercent(self, data)
         # Computed price forecasts
         self.price_forecast_div = PriceForecastDiv(self)
         self.price_forecast_div_buyback = PriceForecastDivBuyback(self)
@@ -100,6 +102,7 @@ class StockDetails:
             # "ps": serialize_value(self.ps),
             "totalDebt": serialize_value(self.total_debt),
             "cash": serialize_value(self.cash),
+            "cashPercent": serialize_value(self.cash_percent),
             "dividend": serialize_value(self.dividend),
             "buyback": serialize_value(self.buyback),
             "buybackPercent": serialize_value(self.buyback_percent)
@@ -150,6 +153,7 @@ class StockDetails:
         # Process computed price forecasts (these depend on previously loaded metrics)
         # The order here matters if there are dependencies among the forecasts
         forecast_metrics = [
+            self.cash_percent,
             self.buyback_percent,
             self.price_forecast_div,
             self.price_forecast_div_buyback,

@@ -132,7 +132,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    ticker = "KHC"
+    ticker = "AAPL"
     provider = "finviz"
     fmp_api_key = os.getenv("FMP_API_KEY")
     intrinio_api_key = os.getenv("intrinio_api_key")
@@ -143,5 +143,5 @@ if __name__ == "__main__":
     
     print(json.dumps(stock_info_composed, indent=2))
 
-    # with open("bb_khc_yfinance_data.json", "w") as f:
-    #     json.dump(stock_info_composed1, f, indent=2)
+    with open("bb_aapl_finviz_data.json", "w") as f:
+        json.dump(stock_info_composed, f, indent=2)

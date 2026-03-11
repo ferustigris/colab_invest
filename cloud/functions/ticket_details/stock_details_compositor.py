@@ -177,6 +177,15 @@ class StockDetailsCompositor(StockDetails):
             [t.buyback_percent for t in tickets],
             self,
             data)
+        self.cash_percent = MetricsCompositor(
+            first_ticket.cash_percent.name,
+            first_ticket.cash_percent.value,
+            first_ticket.cash_percent.comment,
+            first_ticket.cash_percent.data_quality,
+            first_ticket.cash_percent.last_update,
+            [t.cash_percent for t in tickets],
+            self,
+            data)
         # Computed price forecasts
         self.price_forecast_div = PriceForecastDiv(self)
         self.price_forecast_div_buyback = PriceForecastDivBuyback(self)

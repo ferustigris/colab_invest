@@ -29,7 +29,7 @@ class PriceForecastFPE(FinancialMetric):
             self.comment += f"\n - Invalid growth ({growth}), Forward P/E ({fpe}), or price ({price}) value"
             return
 
-        self.value = (8.5 + 2 * growth * 100) * price / fpe
+        self.value = (8.5 + growth * 100) * price / fpe
 
         self.data_quality = self.stock_details.current_price.data_quality * self.stock_details.profit_growth_10_years.data_quality * self.stock_details.fpe.data_quality
         self.comment += f"\n - current data quality: {self.data_quality:.2f}"

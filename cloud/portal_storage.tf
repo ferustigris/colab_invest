@@ -1,46 +1,19 @@
-resource "google_storage_bucket" "flutter_web" {
-  
-  name          = "${var.project}-web"
-  location      = var.region
-
-  website {
-    main_page_suffix = "index.html"
-    not_found_page   = "index.html"
-  }
-
-  uniform_bucket_level_access = true
+locals {
+  portal_web_files = fileset("${path.module}/../portal_ux/web", "**")
 }
 
-resource "google_storage_bucket_iam_binding" "public" {
-  bucket = google_storage_bucket.flutter_web.name
-  role   = "roles/storage.objectViewer"
-  members = ["allUsers"]
-}
-
-
-resource "google_storage_bucket_object" "flutter_assets" {
-  name   = "${each.value}"
-  bucket = google_storage_bucket.flutter_web.name
-  source = "${path.module}/../portal_ux/build/web/${each.value}"
-  content_type = lookup(
-    {
-      "index.html"     = "text/html"
-      "main.dart.js"   = "application/javascript"
-      "flutter.js"     = "application/javascript"
-      "favicon.png"    = "image/png"
-      "manifest.json"  = "application/json"
-    },
-    each.value,
-    "application/octet-stream"
-  )
-  for_each = fileset("${path.module}/../portal_ux/build/web", "**")
-  depends_on = [null_resource.flutter_assets_trigger]
-}
-resource "null_resource" "flutter_assets_trigger" {
-  for_each = fileset("${path.module}/../portal_ux/build/web", "**")
+resource "null_resource" "firebase_hosting_deploy" {
+  depends_on = [google_project_service.firebase_hosting]
 
   triggers = {
-    file_hash = filebase64sha256("${path.module}/../portal_ux/build/web/${each.value}")
+    # Re-deploy hosting when any source web file or pubspec changes.
+    web_hashes    = sha1(join("", [for f in local.portal_web_files : filebase64sha256("${path.module}/../portal_ux/web/${f}")]))
+    pubspec_hash  = filebase64sha256("${path.module}/../portal_ux/pubspec.yaml")
+    firebase_hash = filebase64sha256("${path.module}/../portal_ux/firebase.json")
+  }
+
+  provisioner "local-exec" {
+    command = "cd ${path.module}/../portal_ux && flutter build web --release && npx -y firebase-tools deploy --only hosting --project ${var.project}"
   }
 }
 

@@ -69,20 +69,6 @@
     "name": "fpe",
     "value": 0
   },
-  "freeCashFlow": {
-    "comment": "Free cash flow available after capital expenditures - freeCashflow data not available",
-    "dataQuality": 0.0,
-    "lastUpdate": "1970-01-01T00:00:00Z",
-    "name": "freeCashFlow",
-    "value": 0
-  },
-  "freeCashFlowPerStock": {
-    "comment": "Free cash flow divided by shares outstanding",
-    "dataQuality": 0.0,
-    "lastUpdate": "1970-01-01T00:00:00Z",
-    "name": "freeCashFlowPerStock",
-    "value": 0
-  },
   "marketCap": {
     "comment": "Total market capitalization based on current share price",
     "dataQuality": 0.0,

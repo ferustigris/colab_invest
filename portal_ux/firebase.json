@@ -1,1 +1,31 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"colab-invest-helper","configurations":{"web":"1:1027027703852:web:aec1b57ae154fef57f9989"}}}}}}
+{
+	"flutter": {
+		"platforms": {
+			"dart": {
+				"lib/firebase_options.dart": {
+					"projectId": "colab-invest-helper",
+					"configurations": {
+						"web": "1:1027027703852:web:aec1b57ae154fef57f9989"
+					}
+				}
+			}
+		}
+	},
+	"firestore": {
+		"rules": "firestore.rules"
+	},
+	"hosting": {
+		"public": "build/web",
+		"ignore": [
+			"firebase.json",
+			"**/.*",
+			"**/node_modules/**"
+		],
+		"rewrites": [
+			{
+				"source": "**",
+				"destination": "/index.html"
+			}
+		]
+	}
+}

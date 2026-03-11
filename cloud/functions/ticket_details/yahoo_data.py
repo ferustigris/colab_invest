@@ -287,7 +287,7 @@ class YahooData:
             # Timestamp - always set to ensure it's not None
             'lastUpdate': last_update,
             'provider': 'bb_fmp',
-            'currency': data_dict.get('currency'),
+            'currency': data_dict.get('reported_currency'),
 
             # Company info
             'longName': data_dict.get('name'),
@@ -379,7 +379,8 @@ class YahooData:
             # Financial health
             'totalDebt': data_dict.get('net_debt_to_ebitda') * data_dict.get('ebitda') if data_dict.get('net_debt_to_ebitda') and data_dict.get('ebitda') else None,
             'totalCash': data_dict.get('cash_per_share') * shares_outstanding if data_dict.get('cash_per_share') and shares_outstanding else None,
-            'freeCashflow': None,
+            'freeCashflow': data_dict.get('net_cash_flow'),
+
             'ebitda': data_dict.get('ebitda'),
             
             # Dividends

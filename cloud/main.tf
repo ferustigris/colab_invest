@@ -28,6 +28,11 @@ resource "google_project_service" "cloud_build" {
   service = "cloudbuild.googleapis.com"
 }
 
+resource "google_project_service" "firebase_hosting" {
+  project = var.project
+  service = "firebasehosting.googleapis.com"
+}
+
 resource "google_project_service" "compute" {
   project = var.project
   service = "compute.googleapis.com"
